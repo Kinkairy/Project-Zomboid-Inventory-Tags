@@ -1,0 +1,9 @@
+Sandbox_EN = {
+    Sandbox_InventoryTags = "Inventory Tags",
+    Sandbox_InventoryTags_EnableCategories = "Enable Container Categories",
+    Sandbox_InventoryTags_EnableCategories_tooltip = "Storage containers use purpose groups and native item categories. Bulk changes require confirmation.",
+    Sandbox_InventoryTags_EnableSorting = "Enable Container Sorting",
+    Sandbox_InventoryTags_EnableSorting_tooltip = "Per-player display sorting for storage-only containers.",
+    Sandbox_InventoryTags_EnableAutoOrganize = "Enable Auto Pack",
+    Sandbox_InventoryTags_EnableAutoOrganize_tooltip = "Run approved native packing recipes through the original game actions.",
+}

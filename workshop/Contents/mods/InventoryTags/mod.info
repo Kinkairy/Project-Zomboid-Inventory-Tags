@@ -1,6 +1,6 @@
 name=Inventory Tags
 id=InventoryTags
-description=Per-container multi-select inventory tags, native-style sorting, and vanilla-recipe auto organize for Project Zomboid Build 42. / 为每个容器提供多选库存标签、原版风格排序，以及使用原版配方逻辑的自动整理。
-modversion=0.1.0
+description=Storage-only native-category groups, native display sorting and native packing. Local test LT9: approved layout; vanilla 42.20.4 source-audited item exclusions. Other mods and in-game validation pending.
+modversion=0.1.1
 versionMin=42.20.2
 author=Kinkairy

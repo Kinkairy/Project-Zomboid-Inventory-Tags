@@ -1,9 +1,9 @@
 {
   "Sandbox_InventoryTags": "库存标签",
   "Sandbox_InventoryTags_EnableCategories": "启用容器分类",
-  "Sandbox_InventoryTags_EnableCategories_tooltip": "允许每个容器多选物品分类。设置标签后，容器只接受命中任意一个所选分类的物品；没有选择任何分类时不做限制。",
+  "Sandbox_InventoryTags_EnableCategories_tooltip": "专用储物容器使用用途分组和游戏原有分类；批量全选或全不选需要确认。",
   "Sandbox_InventoryTags_EnableSorting": "启用容器排序",
-  "Sandbox_InventoryTags_EnableSorting_tooltip": "显示按名称、数量、重量和类别排序当前容器的功能。排序只改变库存显示。",
-  "Sandbox_InventoryTags_EnableAutoOrganize": "启用自动整理",
-  "Sandbox_InventoryTags_EnableAutoOrganize_tooltip": "允许使用原版 Packing 配方自动整理当前容器。自动整理不会执行开箱、解包或拆叠类配方。"
+  "Sandbox_InventoryTags_EnableSorting_tooltip": "专用储物容器的每玩家独立显示排序。",
+  "Sandbox_InventoryTags_EnableAutoOrganize": "启用自动打包",
+  "Sandbox_InventoryTags_EnableAutoOrganize_tooltip": "通过原版动作执行已允许的原版打包配方。"
 }

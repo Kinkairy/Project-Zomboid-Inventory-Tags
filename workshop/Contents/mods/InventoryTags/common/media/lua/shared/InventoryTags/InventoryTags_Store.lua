@@ -1,341 +1,131 @@
 require "InventoryTags/InventoryTags_Core"
-
-InventoryTags.Store = InventoryTags.Store or {}
-local Store = InventoryTags.Store
-
-local ROOT_KEY = "InventoryTags"
-
-local function normalize(record)
-    if not record then
-        return nil
+require "InventoryTags/InventoryTags_Categories"
+require "InventoryTags/InventoryTags_StorageScope"
+local IT=InventoryTags
+IT.Store=IT.Store or {}
+local S=IT.Store
+S.KEY="InventoryTagsNativeCategoryRules"
+S.serial=0
+function S.owner(c)
+    if not c or IT.call(c,"getType")=="floor" then return nil end
+    -- An item-owned bag stays item-owned even when nested in a vehicle.
+    local item=IT.call(c,"getContainingItem")
+    if item and IT.call(item,"getInventory")==c then return {kind="item",object=item,key="bag"} end
+    local part=IT.call(c,"getVehiclePart")
+    if part and IT.call(part,"getItemContainer")==c then return {kind="vehicle",object=part,key="part"} end
+    local obj=IT.call(c,"getParent")
+    if not obj or instanceof(obj,"IsoGameCharacter") or instanceof(obj,"IsoDeadBody") then return nil end
+    local n=IT.call(obj,"getContainerCount")
+    if not n then return nil end
+    for i=0,n-1 do
+        if obj:getContainerByIndex(i)==c then return {kind="world",object=obj,key=tostring(i),index=i} end
     end
-    record.categories = record.categories or {}
-    record.sortMode = record.sortMode or "default"
+end
+function S.isSupported(c) return IT.StorageScope.accepts(c,S.owner(c)) end
+function S.raw(c)
+    local owner=S.owner(c)
+    if not owner then return nil end
+    local root=owner.object:getModData()[S.KEY]
+    local record=type(root)=="table" and root[owner.key] or nil
+    if type(record)~="table" or record.schema~=6 or record.selector~="InventoryDisplayCategory"
+        or type(record.all)~="boolean" or type(record.categories)~="table" then return nil end
     return record
 end
-
-local function getContainerIndex(parent, container)
-    if not parent or not container or not parent.getContainerCount or not parent.getContainerByIndex then
-        return nil
+function S.get(c,create)
+    if not S.isSupported(c) then return nil end
+    local owner=S.owner(c)
+    local md=owner.object:getModData()
+    local root=md[S.KEY]
+    if not root and create then root={};md[S.KEY]=root end
+    if type(root)~="table" then return nil end
+    local r=root[owner.key]
+    if not r and create then
+        S.serial=S.serial+1
+        r={schema=6,selector="InventoryDisplayCategory",all=true,categories={},revision=0,
+            uid=tostring(IT.now())..":"..tostring(ZombRand and ZombRand(1000000000) or 0)..":"..S.serial}
+        root[owner.key]=r
     end
-
-    local count = parent:getContainerCount()
-    for i = 0, count - 1 do
-        if parent:getContainerByIndex(i) == container then
-            return i
-        end
-    end
-    return nil
+    if type(r)~="table" or r.schema~=6 or r.selector~="InventoryDisplayCategory"
+        or type(r.all)~="boolean" or type(r.categories)~="table" then return nil end
+    return r
 end
-
-function Store.getOwner(container)
-    if not container or container:getType() == "floor" then
-        return nil
-    end
-
-    local part = container:getVehiclePart()
-    if part then
-        return {
-            kind = "vehicle",
-            part = part,
-            vehicle = part:getVehicle(),
-        }
-    end
-
-    local item = container:getContainingItem()
-    if item then
-        return {
-            kind = "item",
-            item = item,
-        }
-    end
-
-    local parent = container:getParent()
-    if not parent then
-        return nil
-    end
-    if instanceof(parent, "IsoGameCharacter") or instanceof(parent, "IsoDeadBody") then
-        return nil
-    end
-    if not parent.getModData then
-        return nil
-    end
-
-    local containerIndex = getContainerIndex(parent, container)
-    if containerIndex == nil then
-        return nil
-    end
-
-    return {
-        kind = "world",
-        object = parent,
-        containerIndex = containerIndex,
-    }
+function S.hasTags(c)
+    local s=S.get(c,false)
+    return s~=nil and (s.all~=true or IT.hasEntries(s.categories))
 end
-
-function Store.isSupported(container)
-    return Store.getOwner(container) ~= nil
+function S.selected(c,k)
+    local s=S.get(c,false)
+    return IT.Categories.selected(s,k)
 end
-
-function Store.getSettings(container, create)
-    local owner = Store.getOwner(container)
-    if not owner then
-        return nil, nil
-    end
-
-    local modData
-    local record
-
-    if owner.kind == "vehicle" then
-        modData = owner.part:getModData()
-        if create and not modData[ROOT_KEY] then
-            modData[ROOT_KEY] = {}
-        end
-        record = modData[ROOT_KEY]
-    elseif owner.kind == "item" then
-        modData = owner.item:getModData()
-        if create and not modData[ROOT_KEY] then
-            modData[ROOT_KEY] = {}
-        end
-        record = modData[ROOT_KEY]
-    else
-        modData = owner.object:getModData()
-        if create and not modData[ROOT_KEY] then
-            modData[ROOT_KEY] = { containers = {} }
-        end
-        local root = modData[ROOT_KEY]
-        if not root then
-            return nil, owner
-        end
-        root.containers = root.containers or {}
-        local key = tostring(owner.containerIndex)
-        if create and not root.containers[key] then
-            root.containers[key] = {}
-        end
-        record = root.containers[key]
-    end
-
-    return normalize(record), owner
+function S.allSelected(c)
+    local s=S.get(c,false)
+    if not s then return true end
+    if s.all==true and not IT.hasEntries(s.categories) then return true end
+    local keys=IT.Categories.keys(c)
+    for _,key in ipairs(keys) do if not IT.Categories.selected(s,key) then return false end end
+    return #keys>0
 end
-
-function Store.hasCategories(container)
-    local settings = Store.getSettings(container, false)
-    if not settings or not settings.categories then
-        return false
-    end
-    for _, enabled in pairs(settings.categories) do
-        if enabled then
-            return true
-        end
-    end
-    return false
+function S.snapshot(c)
+    local s=S.get(c,true)
+    if not s then return nil end
+    return {schema=6,selector="InventoryDisplayCategory",all=s.all,uid=s.uid,revision=s.revision,categories=IT.copy(s.categories)}
 end
-
-function Store.isCategoryEnabled(container, categoryId)
-    local settings = Store.getSettings(container, false)
-    return settings and settings.categories and settings.categories[categoryId] == true or false
-end
-
-function Store.setCategory(container, categoryId, enabled)
-    local settings = Store.getSettings(container, true)
-    if not settings then
-        return false
-    end
-    if enabled then
-        settings.categories[categoryId] = true
-    else
-        settings.categories[categoryId] = nil
+function S.setAll(c,on)
+    local s=S.get(c,true)
+    if not s or type(on)~="boolean" then return false end
+    if s.all~=on or IT.hasEntries(s.categories) then
+        s.all=on;s.categories={};s.revision=s.revision+1
     end
     return true
 end
-
-function Store.toggleCategory(container, categoryId)
-    local enabled = not Store.isCategoryEnabled(container, categoryId)
-    Store.setCategory(container, categoryId, enabled)
-    return enabled
-end
-
-function Store.clearCategories(container)
-    local settings = Store.getSettings(container, true)
-    if not settings then
-        return false
-    end
-    settings.categories = {}
+-- categories is a sparse override map relative to the explicit default all.
+-- Preserve false values: deleting an unchecked key in all=true mode would turn
+-- it back on. An empty map is never implicitly interpreted as "unrestricted".
+function S.set(c,k,on)
+    local record=S.get(c,true)
+    if not record or not IT.Categories.validKey(k) or type(on)~="boolean" then return false end
+    if IT.Categories.selected(record,k)==on then return true end
+    if on==record.all then record.categories[k]=nil else record.categories[k]=on end
+    record.revision=record.revision+1
     return true
 end
-
-function Store.getSortMode(container)
-    local settings = Store.getSettings(container, false)
-    return settings and settings.sortMode or "default"
-end
-
-function Store.setSortMode(container, mode)
-    local settings = Store.getSettings(container, true)
-    if not settings then
-        return false
+function S.setGroup(c,group,on)
+    local record=S.get(c,true)
+    if not record or not IT.Categories.groupSet[group] or type(on)~="boolean" then return false end
+    local keys=IT.Categories.groupKeys(group,c)
+    if #keys==0 then return false end
+    local changed=false
+    for _,k in ipairs(keys) do
+        if IT.Categories.selected(record,k)~=on then
+            if on==record.all then record.categories[k]=nil else record.categories[k]=on end
+            changed=true
+        end
     end
-    settings.sortMode = mode or "default"
+    if changed then record.revision=record.revision+1 end
     return true
 end
-
-function Store.encodeCategories(categories)
-    local ids = {}
-    for id, enabled in pairs(categories or {}) do
-        if enabled then
-            table.insert(ids, tostring(id))
-        end
+-- Internal reset helper. No additional 'clear tags' menu entry is created.
+function S.clear(c) return S.setAll(c,true) end
+function S.receive(c,packet)
+    if type(packet)~="table" or packet.schema~=6 or packet.selector~="InventoryDisplayCategory" or type(packet.all)~="boolean"
+        or type(packet.uid)~="string" or #packet.uid>160
+        or not IT.integer(packet.revision,0,2147483647) or type(packet.categories)~="table" then return false end
+    local copy,count={},0
+    for k,v in pairs(packet.categories) do
+        if not IT.Categories.validKey(k) or type(v)~="boolean" then return false end
+        copy[k]=v;count=count+1
+        if count>1024 then return false end
     end
-    table.sort(ids)
-    return table.concat(ids, ",")
-end
-
-function Store.decodeCategories(encoded)
-    local categories = {}
-    if not encoded or encoded == "" then
-        return categories
-    end
-    for id in string.gmatch(encoded, "[^,]+") do
-        categories[id] = true
-    end
-    return categories
-end
-
-function Store.applyNetworkSettings(container, args)
-    local settings = Store.getSettings(container, true)
-    if not settings then
-        return false
-    end
-
-    settings.categories = Store.decodeCategories(args and args.categories or "")
-    settings.sortMode = args and args.sortMode or "default"
-    local nativeAccept = args and args.nativeAccept or nil
-    settings.nativeAccept = nativeAccept ~= "" and nativeAccept or nil
+    local s=S.get(c,true)
+    if not s then return false end
+    if s.uid==packet.uid and s.revision>packet.revision then return false end
+    s.uid=packet.uid;s.revision=packet.revision;s.categories=copy;s.all=packet.all
     return true
 end
-
-local function addWorldRoot(args, root)
-    local parent = root and root:getParent() or nil
-    if not parent or not parent.getContainerCount or not parent.getContainerByIndex then
-        return false
-    end
-
-    local square = parent:getSquare()
-    local containerIndex = getContainerIndex(parent, root)
-    if not square or containerIndex == nil then
-        return false
-    end
-
-    args.rootKind = "world"
-    args.x = square:getX()
-    args.y = square:getY()
-    args.z = square:getZ()
-    args.objectIndex = parent:getObjectIndex()
-    args.rootContainerIndex = containerIndex
-    return true
-end
-
-local function addVehicleRoot(args, root)
-    local part = root and root:getVehiclePart() or nil
-    local vehicle = part and part:getVehicle() or nil
-    if not part or not vehicle then
-        return false
-    end
-
-    args.rootKind = "vehicle"
-    args.vehicle = vehicle:getId()
-    args.partIndex = part:getIndex()
-    return true
-end
-
-local function addItemLocator(args, item, playerObj)
-    args.itemID = item:getID()
-
-    local worldItem = item:getWorldItem()
-    if worldItem and worldItem:getSquare() and not item:getContainer() then
-        local square = worldItem:getSquare()
-        args.rootKind = "ground"
-        args.x = square:getX()
-        args.y = square:getY()
-        args.z = square:getZ()
-        return true
-    end
-
-    local root = item:getOutermostContainer()
-    if not root then
-        return false
-    end
-
-    if playerObj and root == playerObj:getInventory() then
-        args.rootKind = "player"
-        return true
-    end
-
-    local rootItem = root:getContainingItem()
-    local rootWorldItem = rootItem and rootItem:getWorldItem() or nil
-    if rootWorldItem and rootWorldItem:getSquare() then
-        local square = rootWorldItem:getSquare()
-        args.rootKind = "groundContainer"
-        args.rootItemID = rootItem:getID()
-        args.x = square:getX()
-        args.y = square:getY()
-        args.z = square:getZ()
-        return true
-    end
-
-    if addVehicleRoot(args, root) then
-        return true
-    end
-
-    if addWorldRoot(args, root) then
-        return true
-    end
-
-    return false
-end
-
-function Store.sync(container, playerObj)
-    local settings, owner = Store.getSettings(container, false)
-    if not settings or not owner then
-        return
-    end
-
-    if not isClient() or not playerObj then
-        return
-    end
-
-    local args = {
-        categories = Store.encodeCategories(settings.categories),
-        sortMode = settings.sortMode or "default",
-        nativeAccept = settings.nativeAccept or "",
-    }
-
-    if owner.kind == "item" then
-        if syncItemModData then
-            syncItemModData(playerObj, owner.item)
-        end
-        args.kind = "item"
-        if not addItemLocator(args, owner.item, playerObj) then
-            return
-        end
-    elseif owner.kind == "vehicle" then
-        if not owner.vehicle then
-            return
-        end
-        args.kind = "vehicle"
-        args.vehicle = owner.vehicle:getId()
-        args.partIndex = owner.part:getIndex()
-    else
-        local square = owner.object:getSquare()
-        if not square then
-            return
-        end
-        args.kind = "world"
-        args.x = square:getX()
-        args.y = square:getY()
-        args.z = square:getZ()
-        args.objectIndex = owner.object:getObjectIndex()
-        args.containerIndex = owner.containerIndex
-    end
-
-    sendClientCommand(playerObj, "InventoryTags", "setContainerSettings", args)
+function S.publish(player,c)
+    local owner=S.owner(c)
+    if not owner then return end
+    if owner.kind=="world" then owner.object:transmitModData()
+    elseif owner.kind=="vehicle" then owner.object:getVehicle():transmitPartModData(owner.object)
+    elseif syncItemModData then syncItemModData(player,owner.object) end
 end

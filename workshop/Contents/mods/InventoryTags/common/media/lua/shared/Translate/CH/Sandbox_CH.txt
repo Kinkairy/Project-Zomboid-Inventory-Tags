@@ -1,0 +1,9 @@
+Sandbox_CH = {
+    Sandbox_InventoryTags = "庫存標籤",
+    Sandbox_InventoryTags_EnableCategories = "啟用容器分類",
+    Sandbox_InventoryTags_EnableCategories_tooltip = "專用儲物容器使用用途分組和遊戲原有分類；批量全選或全不選需要確認。",
+    Sandbox_InventoryTags_EnableSorting = "啟用容器排序",
+    Sandbox_InventoryTags_EnableSorting_tooltip = "專用儲物容器的每玩家獨立顯示排序。",
+    Sandbox_InventoryTags_EnableAutoOrganize = "啟用自動打包",
+    Sandbox_InventoryTags_EnableAutoOrganize_tooltip = "透過原版動作執行已允許的原版打包配方。",
+}
