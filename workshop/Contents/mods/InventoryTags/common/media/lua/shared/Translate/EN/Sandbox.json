@@ -1,0 +1,9 @@
+{
+  "Sandbox_InventoryTags": "Inventory Tags",
+  "Sandbox_InventoryTags_EnableCategories": "Enable Container Categories",
+  "Sandbox_InventoryTags_EnableCategories_tooltip": "Allow containers to use multiple inventory-category tags. Tagged containers accept only items matching at least one selected category. No selected categories means unrestricted.",
+  "Sandbox_InventoryTags_EnableSorting": "Enable Container Sorting",
+  "Sandbox_InventoryTags_EnableSorting_tooltip": "Show per-container display sorting controls for name, quantity, weight, and category.",
+  "Sandbox_InventoryTags_EnableAutoOrganize": "Enable Auto Organize",
+  "Sandbox_InventoryTags_EnableAutoOrganize_tooltip": "Allow supported vanilla Packing recipes to be run automatically for the current container. Unpack/open recipes are never selected."
+}

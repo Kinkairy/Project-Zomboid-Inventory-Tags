@@ -1,0 +1,22 @@
+VERSION = 1,
+
+option InventoryTags.EnableCategories = {
+    type = boolean,
+    default = true,
+    page = InventoryTags,
+    translation = InventoryTags_EnableCategories,
+}
+
+option InventoryTags.EnableSorting = {
+    type = boolean,
+    default = true,
+    page = InventoryTags,
+    translation = InventoryTags_EnableSorting,
+}
+
+option InventoryTags.EnableAutoOrganize = {
+    type = boolean,
+    default = true,
+    page = InventoryTags,
+    translation = InventoryTags_EnableAutoOrganize,
+}
