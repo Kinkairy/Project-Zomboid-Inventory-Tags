@@ -1,5 +1,7 @@
 # Inventory Tags / 库存标签 / 庫存標籤
 
+![Inventory Tags cover](workshop/preview.png)
+
 Lua-only storage management for **Project Zomboid B42.20**. Mod ID: `InventoryTags`.
 
 **Current source: 0.1.1-LT9, test build.** Minimum declared game version: 42.20.2.
@@ -50,7 +52,7 @@ menu entries; this is not deletion of game items or the animal system.
 ## Source layout and local testing
 
 ```text
-workshop/Contents/mods/InventoryTags/  # exact 35-file LT9 runtime
+workshop/Contents/mods/InventoryTags/  # 35 LT9 source files + 2 icon files
 translations/catalog.json            # reviewed EN/CN/CH rows
 translations/generate.py             # check by default; explicit --write to regenerate
 docs/                                # grouping and validation scope
@@ -70,7 +72,7 @@ python tools/verify_runtime.py
 python translations/generate.py
 ```
 
-The manifest is pinned to LT9. Any future intentional runtime change must receive
+The manifest is pinned to LT9 with icon integration. Any future intentional runtime change must receive
 its own review and updated manifest. Edit trilingual rows together, then explicitly
 run `python translations/generate.py --write` and review the generated diff.
 Vanilla child-category translations are not republished by this mod.
@@ -84,3 +86,20 @@ Source publication is not a Steam release or proof of game-engine validation.
 The detailed local-source audit fixture remains outside the public source tree.
 
 Author: Kinkairy. License: MIT; see [LICENSE](LICENSE).
+
+## Cover assets
+
+The owner requested smaller images for this repository update. The approved
+illustration is resized to 256 x 256, quantized to a compact 20-color palette,
+and PNG-optimized without redrawing or replacing its content. Each export is
+10,236 bytes. This reduces resolution and color detail; it is not a lossless
+copy of the original artwork.
+
+`assets/cover-master.png`, `workshop/preview.png`, and both `icon.png` files use
+identical optimized bytes. The legacy `cover-master.png` filename is retained,
+but the repository file is now an optimized export, not the 1254 x 1254 archival
+original. The full-size original remains in the previously supplied review ZIP.
+The simplified/traditional Chinese subtitle and `B42.20 | MP | INTERFACE` footer
+are retained. Both `mod.info` files reference `icon=icon.png`.
+
+These source changes do not publish or update a live Steam Workshop item.
