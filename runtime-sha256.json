@@ -1,6 +1,6 @@
 {
   "42.20/icon.png": "cf0d69836a58827550dd325bcffa46ad450b549b36ae1e7fe61c117048618e7f",
-  "42.20/mod.info": "30a913220a9f36bdb6e6d0c53443f9135c8e4971b154a95fa010faebd25ef2e7",
+  "42.20/mod.info": "b4bd767d3f388191b34aeee500ca71d00d047e7635595440b23d57d72435a5b7",
   "common/media/lua/client/InventoryTags/InventoryTags_AutoOrganize.lua": "c487e85897b458b7d9c48fd1e15f7c5a3a0b4e466f6b0ff4f1d35365e476c735",
   "common/media/lua/client/InventoryTags/InventoryTags_Controls.lua": "8d5bc93fef8337c527b63e818dd7e522b8c8a289ba0c727611a6df0b07e597b4",
   "common/media/lua/client/InventoryTags/InventoryTags_Hooks.lua": "74e23c346665b2c7c3a3f5b3695f4f3bf02b2ddabb62d4e613ac43dfcd3f47ed",
@@ -35,5 +35,5 @@
   "common/media/lua/shared/Translate/EN/Sandbox_EN.txt": "dcd3e219543178808ed95b07da6231c766966d29e26f0ec06685813c56796b7d",
   "common/media/sandbox-options.txt": "73126fcee7b4fba63d0b9e241e8bbb0ec2606b01755e0991bbe9a27aa88913c8",
   "icon.png": "cf0d69836a58827550dd325bcffa46ad450b549b36ae1e7fe61c117048618e7f",
-  "mod.info": "30a913220a9f36bdb6e6d0c53443f9135c8e4971b154a95fa010faebd25ef2e7"
+  "mod.info": "b4bd767d3f388191b34aeee500ca71d00d047e7635595440b23d57d72435a5b7"
 }

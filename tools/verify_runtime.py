@@ -30,7 +30,7 @@ def main():
         bad = sorted(k for k in set(actual) | set(manifest) if actual.get(k) != manifest.get(k))
         raise SystemExit('FAIL: runtime differs: ' + ', '.join(bad))
     digest = tree_hash(payload).hex()
-    if digest != '3f107a9ccba5893b58ddd50ea926879b06dc5de8':
+    if digest != 'f16bdda62b516cbf14ff7630866c3e3f0d5565d0':
         raise SystemExit('FAIL: unexpected runtime tree ' + digest)
     print('PASS: 37 exact LT9 + icon files; runtime tree ' + digest)
 

@@ -1,6 +1,7 @@
 name=Inventory Tags
 id=InventoryTags
 icon=icon.png
+poster=icon.png
 description=Storage-only native-category groups, native display sorting and native packing. Local test LT9: approved layout; vanilla 42.20.4 source-audited item exclusions. Other mods and in-game validation pending.
 modversion=0.1.1
 versionMin=42.20.2
