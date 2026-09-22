@@ -17,3 +17,9 @@ option InventoryTags.EnableAutoOrganize = {
     page = InventoryTags,
     translation = InventoryTags_EnableAutoOrganize,
 }
+option InventoryTags.EnableSelection = {
+    type = boolean,
+    default = true,
+    page = InventoryTags,
+    translation = InventoryTags_EnableSelection,
+}

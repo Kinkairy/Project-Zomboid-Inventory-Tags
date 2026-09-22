@@ -33,4 +33,10 @@ IG_UI_EN = {
     IGUI_InventoryTags_GroupContainers = "Containers",
     IGUI_InventoryTags_GroupEntertainment = "Entertainment",
     IGUI_InventoryTags_GroupToys = "Toys",
+    IGUI_InventoryTags_Select = "Select",
+    IGUI_InventoryTags_SelectMatches = "Select matching items",
+    IGUI_InventoryTags_ClearSelection = "Clear selection",
+    IGUI_InventoryTags_SelectionUnavailable = "Selection was not changed. Open the intended container and try again.",
+    IGUI_InventoryTags_SelectionDragging = "Finish dragging before selecting by category.",
+    IGUI_InventoryTags_SelectionMixedLimit = "A same-name stack mixes categories beyond the native visible-row limit. Selection was not changed; separate that stack first.",
 }

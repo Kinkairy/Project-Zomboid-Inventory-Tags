@@ -33,7 +33,13 @@
     ["IGUI_InventoryTags_GroupCooking", "Kitchenware", "厨具", "廚具"],
     ["IGUI_InventoryTags_GroupContainers", "Containers", "容器", "容器"],
     ["IGUI_InventoryTags_GroupEntertainment", "Entertainment", "娱乐", "娛樂"],
-    ["IGUI_InventoryTags_GroupToys", "Toys", "玩具", "玩具"]
+    ["IGUI_InventoryTags_GroupToys", "Toys", "玩具", "玩具"],
+    ["IGUI_InventoryTags_Select", "Select", "选取", "選取"],
+    ["IGUI_InventoryTags_SelectMatches", "Select matching items", "选中匹配物品", "選中符合的物品"],
+    ["IGUI_InventoryTags_ClearSelection", "Clear selection", "取消选取", "取消選取"],
+    ["IGUI_InventoryTags_SelectionUnavailable", "Selection was not changed. Open the intended container and try again.", "未更改选取。请打开目标容器后重试。", "未更改選取。請開啟目標容器後重試。"],
+    ["IGUI_InventoryTags_SelectionDragging", "Finish dragging before selecting by category.", "请先结束拖动物品，再按分类选取。", "請先結束拖曳物品，再按分類選取。"],
+    ["IGUI_InventoryTags_SelectionMixedLimit", "A same-name stack mixes categories beyond the native visible-row limit. Selection was not changed; separate that stack first.", "同名堆叠混有不同分类，匹配物品超出原版可显示行数。本次未更改选取，请先拆分该堆叠。", "同名堆疊混有不同分類，符合物品超出原版可顯示列數。本次未更改選取，請先拆分該堆疊。"]
   ],
   "Sandbox": [
     ["Sandbox_InventoryTags", "Inventory Tags", "库存标签", "庫存標籤"],
@@ -42,6 +48,8 @@
     ["Sandbox_InventoryTags_EnableSorting", "Enable Container Sorting", "启用容器排序", "啟用容器排序"],
     ["Sandbox_InventoryTags_EnableSorting_tooltip", "Per-player display sorting for storage-only containers.", "专用储物容器的每玩家独立显示排序。", "專用儲物容器的每玩家獨立顯示排序。"],
     ["Sandbox_InventoryTags_EnableAutoOrganize", "Enable Auto Pack", "启用自动打包", "啟用自動打包"],
-    ["Sandbox_InventoryTags_EnableAutoOrganize_tooltip", "Run approved native packing recipes through the original game actions.", "通过原版动作执行已允许的原版打包配方。", "透過原版動作執行已允許的原版打包配方。"]
+    ["Sandbox_InventoryTags_EnableAutoOrganize_tooltip", "Run approved native packing recipes through the original game actions.", "通过原版动作执行已允许的原版打包配方。", "透過原版動作執行已允許的原版打包配方。"],
+    ["Sandbox_InventoryTags_EnableSelection", "Enable Category Selection", "启用按分类选取", "啟用按分類選取"],
+    ["Sandbox_InventoryTags_EnableSelection_tooltip", "Select matching items in the displayed container only. Does not transfer items or change storage rules.", "只选中当前显示容器内匹配的物品。不搬运物品，不改变存放规则。", "只選中目前顯示容器內符合的物品。不搬運物品，不改變存放規則。"]
   ]
 }

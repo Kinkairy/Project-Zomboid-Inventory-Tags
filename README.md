@@ -4,10 +4,10 @@
 
 Lua-only storage management for **Project Zomboid B42.20**. Mod ID: `InventoryTags`.
 
-**Current source: 0.1.1-LT9, test build.** Minimum declared game version: 42.20.2.
-Client/server multiplayer paths are included. LT9 has offline validation, not
-completed Windows installation, in-game multiplayer, or other-mod certification.
-No Steam Workshop item is created or published by this source repository.
+**Current source: 0.1.2-SELECT1, test build.** Minimum declared game version: 42.20.2.
+Client/server multiplayer paths are included. SELECT1 has offline tests, not
+completed in-game controller, multiplayer, or other-mod certification.
+Existing Workshop item: `3806178177`. This source update does not publish it.
 
 ## Features
 
@@ -27,12 +27,21 @@ craft/timed actions. Consumed inputs must come from the selected container;
 accessible character-carried keep-items may be used. Native action receipts
 identify outputs before returning them through normal transfer actions.
 
-The three features have independent sandbox switches. Native context menus and
+**Select:** select actual items in the currently displayed inventory/loot list
+by the same parent groups and native categories. Click a group or child to
+apply immediately; reopen to combine another category. Choices are local to the
+pane/container and separate from storage rules. No auto-taking or transfer is
+performed. Fully matching stacks collapse for complete native stack selection.
+See [selection controls and test scope](docs/selection.md).
+
+The four features have independent sandbox switches. Native context menus and
 inventory-window controls provide the UI, including controller navigation.
-Supported targets are dedicated storage: approved furniture/container types,
+Storage-rule targets are dedicated storage: approved furniture/container types,
 portable bags, and recognized vehicle cargo compartments. Floor views, character
 main inventories, and functional appliances are not generic rule targets.
 Original capacity, access and item-acceptance restrictions remain authoritative.
+Select can also operate on the character main inventory; this does not turn it
+into a storage-rule target.
 
 ## 分类 / 分類
 
@@ -52,7 +61,7 @@ menu entries; this is not deletion of game items or the animal system.
 ## Source layout and local testing
 
 ```text
-workshop/Contents/mods/InventoryTags/  # 35 LT9 source files + 2 icon files
+workshop/Contents/mods/InventoryTags/  # 38-file SELECT1 test runtime
 translations/catalog.json            # reviewed EN/CN/CH rows
 translations/generate.py             # check by default; explicit --write to regenerate
 docs/                                # grouping and validation scope
@@ -72,7 +81,7 @@ python tools/verify_runtime.py
 python translations/generate.py
 ```
 
-The manifest is pinned to LT9 with icon integration. Any future intentional runtime change must receive
+The manifest is pinned to SELECT1 with unchanged icon/poster integration. Any future intentional runtime change must receive
 its own review and updated manifest. Edit trilingual rows together, then explicitly
 run `python translations/generate.py --write` and review the generated diff.
 Vanilla child-category translations are not republished by this mod.
@@ -100,6 +109,6 @@ identical optimized bytes. The legacy `cover-master.png` filename is retained,
 but the repository file is now an optimized export, not the 1254 x 1254 archival
 original. The full-size original remains in the previously supplied review ZIP.
 The simplified/traditional Chinese subtitle and `B42.20 | MP | INTERFACE` footer
-are retained. Both `mod.info` files reference `icon=icon.png`.
+are retained. Both `mod.info` files reference `icon=icon.png` and `poster=icon.png`.
 
 These source changes do not publish or update a live Steam Workshop item.

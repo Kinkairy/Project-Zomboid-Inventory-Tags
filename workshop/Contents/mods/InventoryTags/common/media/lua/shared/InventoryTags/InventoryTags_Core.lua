@@ -1,6 +1,6 @@
 InventoryTags = InventoryTags or {}
 local IT = InventoryTags
-IT.VERSION = "0.1.1-LT9"
+IT.VERSION = "0.1.2-SELECT1"
 IT.PROTOCOL = 6
 IT.ACCEPT_FUNCTION = "InventoryTags.Filter.acceptItem"
 IT.MAX_AUTO_ORGANIZE_STEPS = 500
@@ -15,6 +15,7 @@ function IT.enabled(name)
     return not v or v[name] ~= false
 end
 function IT.categoriesEnabled() return IT.enabled("EnableCategories") end
+function IT.selectionEnabled() return IT.enabled("EnableSelection") end
 function IT.sortingEnabled() return IT.enabled("EnableSorting") end
 function IT.autoOrganizeEnabled() return IT.enabled("EnableAutoOrganize") end
 -- A guarded read of optional native APIs; never substitutes a successful write.

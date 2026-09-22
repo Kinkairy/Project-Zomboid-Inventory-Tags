@@ -1,6 +1,7 @@
 require "InventoryTags/InventoryTags_Text"
 require "InventoryTags/InventoryTags_Sort"
 require "InventoryTags/InventoryTags_AutoOrganize"
+require "InventoryTags/InventoryTags_Selection"
 require "ISUI/ISContextMenu"
 require "ISUI/ISModalDialog"
 local IT=InventoryTags
@@ -15,6 +16,7 @@ local function submenu(context,label,target,callback)
     return child,option
 end
 function M.available(which,c)
+    if which=="Select" then return IT.selectionEnabled() and c~=nil and IT.call(c,"getItems")~=nil end
     if not IT.Store.isSupported(c) then return false end
     if which=="Categories" then return IT.categoriesEnabled() end
     if which=="Sort" then return IT.sortingEnabled() end
@@ -159,7 +161,12 @@ function M.entry(context,playerNum,c,which)
     local prior=context._InventoryTagsEntries[key]
     if prior and present(context,prior) and prior.name==IT.text(which) then return end
     local option
-    if which=="Categories" or which=="Sort" then
+    if which=="Select" then
+        local pane=IT.Selection.findPane(playerNum,c)
+        if not IT.Selection.available(pane,c) then return end
+        local child;child,option=submenu(context,IT.text("Select"))
+        IT.Selection.menu(child,playerNum,c,pane,enableParentNavigation)
+    elseif which=="Categories" or which=="Sort" then
         local child;child,option=submenu(context,IT.text(which))
         if which=="Categories" then M.categories(child,playerNum,c) else M.sort(child,playerNum,c) end
     else
@@ -172,7 +179,7 @@ end
 function M.all(context,playerNum,c)
     if not context or not c then return end
     local any=false
-    for _,kind in ipairs({"Categories","Sort","Auto"}) do if M.available(kind,c) then any=true;break end end
+    for _,kind in ipairs({"Categories","Sort","Auto","Select"}) do if M.available(kind,c) and (kind~="Select" or IT.Selection.findPane(playerNum,c)) then any=true;break end end
     if not any then return end
     context._InventoryTagsRoots=context._InventoryTagsRoots or {}
     local saved=context._InventoryTagsRoots[c]
@@ -185,15 +192,20 @@ function M.all(context,playerNum,c)
         -- prior invocation's dedup markers or live checkbox view.
         child._InventoryTagsEntries={}
     end
-    for _,kind in ipairs({"Categories","Sort","Auto"}) do M.entry(child,playerNum,c,kind) end
+    for _,kind in ipairs({"Categories","Sort","Auto","Select"}) do M.entry(child,playerNum,c,kind) end
 end
-function M.open(playerNum,c,control,which)
+function M.open(playerNum,c,control,which,pane)
     if not M.available(which,c) then return end
     if which=="Auto" then IT.AutoOrganize.start(playerNum,c);return end
     if not control then return end
-    if which=="Sort" then M.live[playerNum]=nil end
+    if which=="Sort" or which=="Select" then M.live[playerNum]=nil end
     local context=ISContextMenu.get(playerNum,control:getAbsoluteX(),control:getAbsoluteY()+control:getHeight())
-    if which=="Categories" then M.categories(context,playerNum,c) else M.sort(context,playerNum,c) end
+    if which=="Select" then
+        pane=pane or IT.Selection.findPane(playerNum,c)
+        if not IT.Selection.available(pane,c) then return end
+        context.origin=pane.inventoryPage or pane.parent
+        IT.Selection.menu(context,playerNum,c,pane,enableParentNavigation)
+    elseif which=="Categories" then M.categories(context,playerNum,c) else M.sort(context,playerNum,c) end
     if JoypadState and JoypadState.players[playerNum+1] and setJoypadFocus then setJoypadFocus(playerNum,context) end
 end
 function M.world(playerNum,context,objects,test)
@@ -219,6 +231,9 @@ function M.world(playerNum,context,objects,test)
 end
 function M.inventory(playerNum,context,items)
     local actual=IT.itemsFromUI(items)
+    -- Selection acts on the displayed SOURCE list, not a bag inside that list.
+    local source=actual[1] and IT.call(actual[1],"getContainer")
+    if source and IT.Selection.findPane(playerNum,source) then M.entry(context,playerNum,source,"Select") end
     if #actual==1 then local c=IT.call(actual[1],"getInventory");if c then M.all(context,playerNum,c) end end
 end
 function M.empty(playerNum,context,isLoot)

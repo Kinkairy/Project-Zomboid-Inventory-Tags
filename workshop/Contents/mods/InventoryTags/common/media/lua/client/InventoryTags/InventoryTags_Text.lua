@@ -36,6 +36,12 @@ local fallback={
         ["GroupContainers"] = "Containers",
         ["GroupEntertainment"] = "Entertainment",
         ["GroupToys"] = "Toys",
+        ["Select"] = "Select",
+        ["SelectMatches"] = "Select matching items",
+        ["ClearSelection"] = "Clear selection",
+        ["SelectionUnavailable"] = "Selection was not changed. Open the intended container and try again.",
+        ["SelectionDragging"] = "Finish dragging before selecting by category.",
+        ["SelectionMixedLimit"] = "A same-name stack mixes categories beyond the native visible-row limit. Selection was not changed; separate that stack first.",
     },
     ["CN"] = {
         ["Categories"] = "分类",
@@ -72,6 +78,12 @@ local fallback={
         ["GroupContainers"] = "容器",
         ["GroupEntertainment"] = "娱乐",
         ["GroupToys"] = "玩具",
+        ["Select"] = "选取",
+        ["SelectMatches"] = "选中匹配物品",
+        ["ClearSelection"] = "取消选取",
+        ["SelectionUnavailable"] = "未更改选取。请打开目标容器后重试。",
+        ["SelectionDragging"] = "请先结束拖动物品，再按分类选取。",
+        ["SelectionMixedLimit"] = "同名堆叠混有不同分类，匹配物品超出原版可显示行数。本次未更改选取，请先拆分该堆叠。",
     },
     ["CH"] = {
         ["Categories"] = "分類",
@@ -108,6 +120,12 @@ local fallback={
         ["GroupContainers"] = "容器",
         ["GroupEntertainment"] = "娛樂",
         ["GroupToys"] = "玩具",
+        ["Select"] = "選取",
+        ["SelectMatches"] = "選中符合的物品",
+        ["ClearSelection"] = "取消選取",
+        ["SelectionUnavailable"] = "未更改選取。請開啟目標容器後重試。",
+        ["SelectionDragging"] = "請先結束拖曳物品，再按分類選取。",
+        ["SelectionMixedLimit"] = "同名堆疊混有不同分類，符合物品超出原版可顯示列數。本次未更改選取，請先拆分該堆疊。",
     },
 }
 function IT.language()

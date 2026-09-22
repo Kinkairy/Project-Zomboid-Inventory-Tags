@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only verification of the complete LT9 runtime plus reviewed icon integration."""
+"""Read-only verification of the complete SELECT1 runtime payload."""
 import hashlib
 import json
 from pathlib import Path
@@ -26,13 +26,13 @@ def main():
     manifest = json.loads((root / 'runtime-sha256.json').read_text(encoding='utf-8'))
     actual = {p.relative_to(payload).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
               for p in payload.rglob('*') if p.is_file()}
-    if actual != manifest or len(actual) != 37:
+    if actual != manifest or len(actual) != 38:
         bad = sorted(k for k in set(actual) | set(manifest) if actual.get(k) != manifest.get(k))
         raise SystemExit('FAIL: runtime differs: ' + ', '.join(bad))
     digest = tree_hash(payload).hex()
-    if digest != 'f16bdda62b516cbf14ff7630866c3e3f0d5565d0':
+    if digest != '0bd1a3d8f54a38127dc68753d762585cf407c426':
         raise SystemExit('FAIL: unexpected runtime tree ' + digest)
-    print('PASS: 37 exact LT9 + icon files; runtime tree ' + digest)
+    print('PASS: 38 exact SELECT1 files; runtime tree ' + digest)
 
 
 if __name__ == '__main__':

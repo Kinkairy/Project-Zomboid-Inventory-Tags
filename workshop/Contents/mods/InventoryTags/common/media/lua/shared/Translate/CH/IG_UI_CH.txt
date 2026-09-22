@@ -33,4 +33,10 @@ IG_UI_CH = {
     IGUI_InventoryTags_GroupContainers = "容器",
     IGUI_InventoryTags_GroupEntertainment = "娛樂",
     IGUI_InventoryTags_GroupToys = "玩具",
+    IGUI_InventoryTags_Select = "選取",
+    IGUI_InventoryTags_SelectMatches = "選中符合的物品",
+    IGUI_InventoryTags_ClearSelection = "取消選取",
+    IGUI_InventoryTags_SelectionUnavailable = "未更改選取。請開啟目標容器後重試。",
+    IGUI_InventoryTags_SelectionDragging = "請先結束拖曳物品，再按分類選取。",
+    IGUI_InventoryTags_SelectionMixedLimit = "同名堆疊混有不同分類，符合物品超出原版可顯示列數。本次未更改選取，請先拆分該堆疊。",
 }

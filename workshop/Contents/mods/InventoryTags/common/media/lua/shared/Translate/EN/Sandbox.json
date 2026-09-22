@@ -5,5 +5,7 @@
   "Sandbox_InventoryTags_EnableSorting": "Enable Container Sorting",
   "Sandbox_InventoryTags_EnableSorting_tooltip": "Per-player display sorting for storage-only containers.",
   "Sandbox_InventoryTags_EnableAutoOrganize": "Enable Auto Pack",
-  "Sandbox_InventoryTags_EnableAutoOrganize_tooltip": "Run approved native packing recipes through the original game actions."
+  "Sandbox_InventoryTags_EnableAutoOrganize_tooltip": "Run approved native packing recipes through the original game actions.",
+  "Sandbox_InventoryTags_EnableSelection": "Enable Category Selection",
+  "Sandbox_InventoryTags_EnableSelection_tooltip": "Select matching items in the displayed container only. Does not transfer items or change storage rules."
 }

@@ -5,5 +5,7 @@
   "Sandbox_InventoryTags_EnableSorting": "启用容器排序",
   "Sandbox_InventoryTags_EnableSorting_tooltip": "专用储物容器的每玩家独立显示排序。",
   "Sandbox_InventoryTags_EnableAutoOrganize": "启用自动打包",
-  "Sandbox_InventoryTags_EnableAutoOrganize_tooltip": "通过原版动作执行已允许的原版打包配方。"
+  "Sandbox_InventoryTags_EnableAutoOrganize_tooltip": "通过原版动作执行已允许的原版打包配方。",
+  "Sandbox_InventoryTags_EnableSelection": "启用按分类选取",
+  "Sandbox_InventoryTags_EnableSelection_tooltip": "只选中当前显示容器内匹配的物品。不搬运物品，不改变存放规则。"
 }
