@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+- Fix Auto Pack output receipt matching after native server input restoration, so crafted outputs return to the original container before the next batch.
+- Set both mod.info version fields to 0.1.3, keeping their existing trilingual description unchanged; the owner verified single-player and multiplayer play.
+- Publish the same 38-file runtime to private/public source and existing Workshop item 3806178177.
+
 ## 0.1.1-LT9
 
 - Sync the owner-approved complete LT9 runtime rather than mixing old and new Lua modules.

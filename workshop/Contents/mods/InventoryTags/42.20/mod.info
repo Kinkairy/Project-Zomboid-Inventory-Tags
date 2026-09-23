@@ -3,6 +3,6 @@ id=InventoryTags
 icon=icon.png
 poster=icon.png
 description=B42.20 | MP | 简体中文：为受支持的储物容器提供分类过滤、显示排序和原版配方自动打包，并可在当前已打开的原生物品列表中按类别选取物品。选取也适用于人物物品栏、尸体、功能性容器和地面列表，只改变当前选中项，不自动转移物品；其他三项功能仍受储物容器范围限制。保留原版容量、访问条件和放入限制。测试版，游戏内验证尚未完成。 / 繁體中文：為受支援的儲物容器提供分類過濾、顯示排序和原版配方自動打包，並可在目前已開啟的原生物品清單中按類別選取物品。選取也適用於人物物品欄、屍體、功能性容器和地面清單，只改變目前選取項目，不自動轉移物品；其他三項功能仍受儲物容器範圍限制。保留原版容量、存取條件和放入限制。測試版，遊戲內驗證尚未完成。 / English: Adds category filtering, display sorting and automatic packing through vanilla recipes to supported storage containers, plus category-based selection in the currently open native item list. Selection also works in character inventories, corpses, functional containers and floor lists; it changes only the current selection and does not automatically transfer items. The other three features remain restricted to supported storage containers. Vanilla capacity, access and item-acceptance restrictions are preserved. Test build; in-game validation is not yet complete.
-modversion=0.1.2
+modversion=0.1.3
 versionMin=42.20.2
 author=Kinkairy

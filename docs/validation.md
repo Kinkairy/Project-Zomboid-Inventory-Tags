@@ -42,3 +42,45 @@ PZ engine/controller/multiplayer validation.
 The two generated English guide candidates remain excluded; this revision adds
 no explanatory screenshots and makes no classification, sorting, or packing
 logic changes.
+
+## PACK1 local test candidate (2026-09-23)
+
+Implementation base: canonical untracked inventory-tags source 0.1.2-SELECT3,
+38-file runtime tree f873f4bc13bab2d7ae9105cfb5d41dee3365ff45. This is a local
+candidate on that lineage; it does not promote an accepted rollback baseline.
+
+The native serverStart restores manual inputs without populating applied input
+data; the native client start explicitly validates first. The old bridge read
+the empty applied-input cache before the recipe ran, rejected the armed ID
+signature, and allowed crafting to finish without issuing its receipt.
+PACK1 validates the native recipe before matching. Native crafting, exact-ID
+output receipts, normal transfers, container restrictions and protocol 6 remain.
+
+tests/packing.lua runs the installed native handcraft Lua and actual mod modules
+with explicit Java/network fixtures. The unchanged base fails the first server
+receipt assertion; the candidate passes 75 checks covering native server and
+single-player callbacks, same-session consecutive batches, delayed receipts and
+item replication, retry cache, stale tokens, kept tools, unrelated crafting,
+wrong IDs, expiry/cancellation, access loss, capacity and category rejection,
+ground outputs, and bounded timeout. The same checks run in the shipped Kahlua
+VM. Java item/container/network behavior is represented by fixtures; this is
+not live multiplayer or single-player gameplay acceptance.
+
+The existing 82 selection tests and all 13 generated trilingual outputs pass.
+Only four runtime files change: CraftBridge, Core build marker, and the two
+mod.info descriptions. Public modversion remains 0.1.2; diagnostic build is
+0.1.2-PACK1. Local single-player testing was explicitly selected. No Workshop,
+server deployment/restart, or source publication is included.
+
+## 0.1.3 publication candidate (2026-09-23)
+
+The owner accepted the local 0.1.2-PACK1 Auto Pack behavior in a single-player save
+and explicitly selected version 0.1.3 for public/private GitHub and existing
+Workshop item 3806178177. The runtime logic is the accepted PACK1 fix; only
+its diagnostic version label and both mod.info version fields change
+for the release. The two mod.info files are byte-identical and retain the
+existing Simplified Chinese, Traditional Chinese and English description verbatim.
+The Workshop description also remains exactly as published before this update.
+The owner reports successful local single-player and multiplayer gameplay checks;
+controller and other-mod combinations remain unverified. No server deployment
+is included.

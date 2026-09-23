@@ -4,10 +4,10 @@
 
 Lua-only storage management for **Project Zomboid B42.20**. Mod ID: `InventoryTags`.
 
-**Current source: 0.1.2-SELECT3, test build.** Minimum declared game version: 42.20.2.
-Client/server multiplayer paths are included. SELECT3 has offline tests, not
-completed in-game controller, multiplayer, or other-mod certification.
-Existing Workshop item: `3806178177`. This source update does not publish it.
+**Current source: 0.1.3.** Minimum declared game version: 42.20.2.
+The owner verified Auto Pack in local single-player and multiplayer play.
+Controller and other-mod combinations remain unverified.
+Existing Workshop item: `3806178177`. Source publication alone does not update Steam.
 
 ## Features
 
@@ -25,7 +25,11 @@ historical timestamps. Sorting does not rearrange or transfer physical items.
 **Auto Pack:** approved exact native Packing recipes run through the original
 craft/timed actions. Consumed inputs must come from the selected container;
 accessible character-carried keep-items may be used. Native action receipts
-identify outputs before returning them through normal transfer actions.
+identify outputs before returning them through normal transfer actions. PACK1
+validates the restored server-side manual inputs before matching their IDs;
+this fills the native applied-input cache and prevents successful crafts from
+silently missing their output receipt. Outputs return before the next batch.
+The tested fix is included in the 0.1.3 release payload.
 
 **Select:** one-shot category selection for the currently displayed native
 inventory or loot list, including character inventory, bags, storage furniture,
@@ -69,7 +73,7 @@ menu entries; this is not deletion of game items or the animal system.
 ## Source layout and local testing
 
 ```text
-workshop/Contents/mods/InventoryTags/  # 38-file SELECT3 test runtime
+workshop/Contents/mods/InventoryTags/  # 38-file 0.1.3 runtime
 translations/catalog.json            # reviewed EN/CN/CH rows
 translations/generate.py             # check by default; explicit --write to regenerate
 docs/                                # grouping and validation scope
@@ -89,7 +93,7 @@ python tools/verify_runtime.py
 python translations/generate.py
 ```
 
-The manifest is pinned to SELECT3 with unchanged icon/poster integration. Any future intentional runtime change must receive
+The manifest is pinned to 0.1.3 with unchanged icon/poster integration. Any future intentional runtime change must receive
 its own review and updated manifest. Edit trilingual rows together, then explicitly
 run `python translations/generate.py --write` and review the generated diff.
 Vanilla child-category translations are not republished by this mod.

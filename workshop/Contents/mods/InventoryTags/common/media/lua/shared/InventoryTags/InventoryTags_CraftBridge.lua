@@ -34,7 +34,12 @@ function B.match(action)
     if not r or r.expires<IT.now() or not IT.autoOrganizeEnabled()
         or r.recipe~=IT.Packing.name(action.craftRecipe) or not IT.Packing.allowed(action.craftRecipe)
         or not IT.Access.canUse(action.character,r.target) then return nil end
-    local data=action.logic and action.logic:getRecipeData()
+    -- Native serverStart restores manual inputs but does not populate their
+    -- applied-item cache. Native client start calls canPerformCurrentRecipe
+    -- first for exactly this reason. Validate before matching the armed IDs,
+    -- while inputs still exist; only the native performRecipe consumes them.
+    if not action.logic or not action.logic:canPerformCurrentRecipe() then return nil end
+    local data=action.logic:getRecipeData()
     local inputs=data and data:getAllNotKeepInputItems()
     local keep=data and data:getAllKeepInputItems()
     if not inputs or not keep then return nil end
