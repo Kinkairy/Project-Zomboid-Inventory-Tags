@@ -1,6 +1,7 @@
 require "InventoryTags/InventoryTags_Menu"
 require "ISUI/LootWindow/ISLootWindowContainerControls"
 require "ISUI/LootWindow/ISLootWindowObjectControlHandler"
+require "ISUI/LootWindow/ISLootWindowFloorControlHandler"
 require "ISUI/InventoryWindow/ISInventoryWindowContainerControls"
 require "ISUI/InventoryWindow/ISInventoryWindowControlHandler"
 local IT=InventoryTags
@@ -29,15 +30,14 @@ if not U.installed then
             return o
         end
         function class:shouldBeVisible()
-            if kind=="Select" then return IT.Selection.available(displayedPane(self),displayed(self)) end
-            return IT.Menu.available(kind,displayed(self))
+            return IT.Menu.available(kind,displayed(self),self.playerNum,displayedPane(self))
         end
         function class:getControl()
             self.control=self:getButtonControl(IT.text(kind))
             return self.control
         end
         function class:perform() IT.Menu.open(self.playerNum,displayed(self),self.control,kind,displayedPane(self)) end
-        function class:handleJoypadContextMenu(context) IT.Menu.all(context,self.playerNum,displayed(self)) end
+        function class:handleJoypadContextMenu(context) IT.Menu.all(context,self.playerNum,displayed(self),displayedPane(self)) end
         U.classes[#U.classes+1]=class
         ISLootWindowContainerControls.AddHandler(class,true)
     end
@@ -51,18 +51,37 @@ if not U.installed then
             local o=ISInventoryWindowControlHandler.new(self);o.altColor=true;return o
         end
         function class:shouldBeVisible()
-            if kind=="Select" then return IT.Selection.available(displayedPane(self),displayed(self)) end
-            return IT.Menu.available(kind,displayed(self))
+            return IT.Menu.available(kind,displayed(self),self.playerNum,displayedPane(self))
         end
         function class:getControl()
             self.control=self:getButtonControl(IT.text(kind));self.control._InventoryTagsOwn=true
             return self.control
         end
         function class:perform() IT.Menu.open(self.playerNum,displayed(self),self.control,kind,displayedPane(self)) end
-        function class:handleJoypadContextMenu(context) IT.Menu.all(context,self.playerNum,displayed(self)) end
+        function class:handleJoypadContextMenu(context) IT.Menu.all(context,self.playerNum,displayed(self),displayedPane(self)) end
         U.inventoryClasses[#U.inventoryClasses+1]=class
         ISInventoryWindowContainerControls.AddHandler(class)
     end
+    -- Floor lists use a separate native registry, not an object handler.
+    -- Register Select ONLY: the original storage features remain storage-only.
+    local floor=ISLootWindowFloorControlHandler:derive("InventoryTagsFloorSelect")
+    function floor:new() return ISLootWindowFloorControlHandler.new(self) end
+    function floor:shouldBeVisible()
+        return IT.call(displayed(self),"getType")=="floor"
+            and IT.Menu.available("Select",displayed(self),self.playerNum,displayedPane(self))
+    end
+    function floor:getControl()
+        self.control=self:getButtonControl(IT.text("Select"))
+        return self.control
+    end
+    function floor:perform()
+        IT.Menu.open(self.playerNum,displayed(self),self.control,"Select",displayedPane(self))
+    end
+    function floor:handleJoypadContextMenu(context)
+        IT.Menu.all(context,self.playerNum,displayed(self),displayedPane(self))
+    end
+    U.floorClass=floor
+    ISLootWindowContainerControls.AddFloorHandler(floor)
     -- The native personal strip has no displayToRight argument. Move only our
     -- already-created buttons; never move/rebuild the original controls.
     local native=ISInventoryWindowContainerControls.arrange

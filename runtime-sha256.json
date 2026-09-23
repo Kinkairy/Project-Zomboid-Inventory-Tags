@@ -1,12 +1,12 @@
 {
   "42.20/icon.png": "cf0d69836a58827550dd325bcffa46ad450b549b36ae1e7fe61c117048618e7f",
-  "42.20/mod.info": "f561f291e4545b049014c0134d670ec5ecfb927f8e2fbbc419125a918f582488",
+  "42.20/mod.info": "feef133570dd39272f92eff5ad0f29d383c3e772c1de0ca927b68414ebc17306",
   "common/media/lua/client/InventoryTags/InventoryTags_AutoOrganize.lua": "c487e85897b458b7d9c48fd1e15f7c5a3a0b4e466f6b0ff4f1d35365e476c735",
-  "common/media/lua/client/InventoryTags/InventoryTags_Controls.lua": "007718fb0be87b5e5bb921b71b4a86d204914f0b5108a8e228e6618c0fa8d5ff",
+  "common/media/lua/client/InventoryTags/InventoryTags_Controls.lua": "ecbcb5e7e203ca4731959fd7b52ed78e607c2b248b821d61c7a158767094855b",
   "common/media/lua/client/InventoryTags/InventoryTags_Hooks.lua": "74e23c346665b2c7c3a3f5b3695f4f3bf02b2ddabb62d4e613ac43dfcd3f47ed",
-  "common/media/lua/client/InventoryTags/InventoryTags_Menu.lua": "e393728255de6340c1816f38f4e99f6009a242774bd6f524a046bf66f47be692",
+  "common/media/lua/client/InventoryTags/InventoryTags_Menu.lua": "4886fc641e11141b0b8e1b5b897e3c57af34870066b448e27b9518a8431ac86f",
   "common/media/lua/client/InventoryTags/InventoryTags_Network.lua": "34dd823c144af3df243179181ba8ab376795493235d6b44044be54c6d7e7befe",
-  "common/media/lua/client/InventoryTags/InventoryTags_Selection.lua": "421b752dc8db95b70b02d328ab31cdca61af6cd36e6dbb31248fddb68a94f2bd",
+  "common/media/lua/client/InventoryTags/InventoryTags_Selection.lua": "3d7155e247af936f09fb4df2769c56601b7ea82ba47ae942c599822acbc5ac7a",
   "common/media/lua/client/InventoryTags/InventoryTags_Sort.lua": "d894ca44d72c0cb4810d6508468a4ee3e11849bb345773c403c3d2b3d4d349d8",
   "common/media/lua/client/InventoryTags/InventoryTags_Text.lua": "15e98d8e8a2b55e2c6a67151a29ae9666357fb578c39031c832e6c6f40dd0e5e",
   "common/media/lua/client/InventoryTags_Client.lua": "0870ead302eb7b3eef8b69b82916ac56cc4e229ab2112968e56f509a2432feda",
@@ -14,7 +14,7 @@
   "common/media/lua/shared/InventoryTags/InventoryTags_Access.lua": "2fa5b6c564f7ef129486074104330f1a9098d9a30cafe8527bfe9cf7de7f2054",
   "common/media/lua/shared/InventoryTags/InventoryTags_Arrival.lua": "f026f9ff3f957918def958e778a3a77f7a69ed16746d5afce09f0f4fead360cc",
   "common/media/lua/shared/InventoryTags/InventoryTags_Categories.lua": "4ac0a0ab2d84c7684b74f3a9edca37555f1ed047086845c0cb27b3a74f749913",
-  "common/media/lua/shared/InventoryTags/InventoryTags_Core.lua": "e51d853ac8b5949e0318081573ea17350f55c4387e626248922b298f98d098ec",
+  "common/media/lua/shared/InventoryTags/InventoryTags_Core.lua": "97266248abcd3da19703b792d9c627c9ff0544d7930411a148a2af3e29b875c5",
   "common/media/lua/shared/InventoryTags/InventoryTags_CraftBridge.lua": "2771e04f57a36b04b21999442e409c17b09af96098a0b6fdb0b7e565770a6138",
   "common/media/lua/shared/InventoryTags/InventoryTags_Filter.lua": "d52b0d84b37e5498214c5d1c021180a943b48f588d60b49011b295c09b5494a3",
   "common/media/lua/shared/InventoryTags/InventoryTags_Packing.lua": "114b689222476ce865c6e9f72af1a4bfeea5d8378fec7a94b23d39d65e35d576",
@@ -36,5 +36,5 @@
   "common/media/lua/shared/Translate/EN/Sandbox_EN.txt": "22eae6110f970f3d9a164ab86ed6b349c14e6744d6a42b02e45a203103962b28",
   "common/media/sandbox-options.txt": "606210440b3fbad0385485b8ca6ec5b067014aa741a08817ee6aa3b57457c15e",
   "icon.png": "cf0d69836a58827550dd325bcffa46ad450b549b36ae1e7fe61c117048618e7f",
-  "mod.info": "f561f291e4545b049014c0134d670ec5ecfb927f8e2fbbc419125a918f582488"
+  "mod.info": "feef133570dd39272f92eff5ad0f29d383c3e772c1de0ca927b68414ebc17306"
 }

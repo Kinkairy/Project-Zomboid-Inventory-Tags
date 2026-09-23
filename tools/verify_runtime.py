@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only verification of the complete SELECT2 runtime payload."""
+"""Read-only verification of the complete SELECT3 runtime payload."""
 import hashlib
 import json
 from pathlib import Path
@@ -30,9 +30,9 @@ def main():
         bad = sorted(k for k in set(actual) | set(manifest) if actual.get(k) != manifest.get(k))
         raise SystemExit('FAIL: runtime differs: ' + ', '.join(bad))
     digest = tree_hash(payload).hex()
-    if digest != '7adf8d65001e4520416a9311c20f6e68ef1feab7':
+    if digest != 'f873f4bc13bab2d7ae9105cfb5d41dee3365ff45':
         raise SystemExit('FAIL: unexpected runtime tree ' + digest)
-    print('PASS: 38 exact SELECT2 files; runtime tree ' + digest)
+    print('PASS: 38 exact SELECT3 files; runtime tree ' + digest)
 
 
 if __name__ == '__main__':

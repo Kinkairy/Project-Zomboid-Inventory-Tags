@@ -15,8 +15,11 @@ local function submenu(context,label,target,callback)
     context:addSubMenu(option,child)
     return child,option
 end
-function M.available(which,c)
-    if which=="Select" then return IT.selectionEnabled() and c~=nil and IT.call(c,"getItems")~=nil end
+function M.available(which,c,playerNum,pane)
+    if which=="Select" then
+        pane=IT.Selection.findPane(playerNum or (pane and pane.player) or 0,c,pane)
+        return IT.Selection.available(pane,c)
+    end
     if not IT.Store.isSupported(c) then return false end
     if which=="Categories" then return IT.categoriesEnabled() end
     if which=="Sort" then return IT.sortingEnabled() end
@@ -154,16 +157,18 @@ local function present(context,option)
     for _,current in ipairs(context.options or {}) do if current==option then return true end end
     return false
 end
-function M.entry(context,playerNum,c,which)
-    if not M.available(which,c) then return end
+-- One namespace and ordering for mouse, empty-list, world and controller menus.
+M.order={"Select","Categories","Sort","Auto"}
+function M.entry(context,playerNum,c,which,pane)
+    if not M.available(which,c,playerNum,pane) then return end
+    if which=="Select" then pane=IT.Selection.findPane(playerNum,c,pane) end
     context._InventoryTagsEntries=context._InventoryTagsEntries or {}
     local key=tostring(c)..":"..which
     local prior=context._InventoryTagsEntries[key]
-    if prior and present(context,prior) and prior.name==IT.text(which) then return end
+    if prior and present(context,prior) and prior.name==IT.text(which)
+        and prior._InventoryTagsPane==pane then return prior end
     local option
     if which=="Select" then
-        local pane=IT.Selection.findPane(playerNum,c)
-        if not IT.Selection.available(pane,c) then return end
         local child;child,option=submenu(context,IT.text("Select"))
         IT.Selection.menu(child,playerNum,c,pane,enableParentNavigation)
     elseif which=="Categories" or which=="Sort" then
@@ -174,12 +179,17 @@ function M.entry(context,playerNum,c,which)
             if M.available("Auto",target) then IT.AutoOrganize.start(playerNum,target) end
         end)
     end
+    option._InventoryTagsPane=pane
     context._InventoryTagsEntries[key]=option
+    return option
 end
-function M.all(context,playerNum,c)
+function M.all(context,playerNum,c,pane)
     if not context or not c then return end
+    pane=IT.Selection.findPane(playerNum,c,pane)
     local any=false
-    for _,kind in ipairs({"Categories","Sort","Auto","Select"}) do if M.available(kind,c) and (kind~="Select" or IT.Selection.findPane(playerNum,c)) then any=true;break end end
+    for _,kind in ipairs(M.order) do
+        if M.available(kind,c,playerNum,pane) then any=true;break end
+    end
     if not any then return end
     context._InventoryTagsRoots=context._InventoryTagsRoots or {}
     local saved=context._InventoryTagsRoots[c]
@@ -188,21 +198,21 @@ function M.all(context,playerNum,c)
     else
         local option;child,option=submenu(context,IT.text("Project"))
         context._InventoryTagsRoots[c]={child=child,option=option}
-        -- Vanilla pools submenu objects. A fresh parent must not inherit a
-        -- prior invocation's dedup markers or live checkbox view.
+        -- Native submenu objects are pooled. Clear only our per-invocation state.
         child._InventoryTagsEntries={}
+        child._InventoryTagsBagEntries={}
     end
-    for _,kind in ipairs({"Categories","Sort","Auto","Select"}) do M.entry(child,playerNum,c,kind) end
+    for _,kind in ipairs(M.order) do M.entry(child,playerNum,c,kind,pane) end
+    return child
 end
 function M.open(playerNum,c,control,which,pane)
-    if not M.available(which,c) then return end
+    if not M.available(which,c,playerNum,pane) then return end
     if which=="Auto" then IT.AutoOrganize.start(playerNum,c);return end
     if not control then return end
     if which=="Sort" or which=="Select" then M.live[playerNum]=nil end
     local context=ISContextMenu.get(playerNum,control:getAbsoluteX(),control:getAbsoluteY()+control:getHeight())
     if which=="Select" then
-        pane=pane or IT.Selection.findPane(playerNum,c)
-        if not IT.Selection.available(pane,c) then return end
+        pane=IT.Selection.findPane(playerNum,c,pane)
         context.origin=pane.inventoryPage or pane.parent
         IT.Selection.menu(context,playerNum,c,pane,enableParentNavigation)
     elseif which=="Categories" then M.categories(context,playerNum,c) else M.sort(context,playerNum,c) end
@@ -210,33 +220,73 @@ function M.open(playerNum,c,control,which,pane)
 end
 function M.world(playerNum,context,objects,test)
     if test then return end
-    local targets,seen={},{}
+    local targets,seen,squares,clickedObjects={},{},{},{}
     local function add(c)
-        if c then IT.Filter.apply(c) end
-        if c and IT.Store.isSupported(c) and not seen[c] then targets[#targets+1]=c;seen[c]=true end
+        if not c or seen[c] then return end
+        seen[c]=true
+        -- Keep the old storage-rule targets as the fallback for unopened boxes.
+        -- Select is resolved separately against ALL clicked containers below.
+        if IT.Store.isSupported(c) then
+            IT.Filter.apply(c)
+            targets[#targets+1]=c
+        end
     end
     for _,obj in ipairs(objects or {}) do
+        clickedObjects[obj]=true
+        local sq=IT.call(obj,"getSquare")
+        if sq then squares[sq]=true end
         local item=IT.call(obj,"getItem")
         if item then add(IT.call(item,"getInventory")) end
+        add(IT.call(obj,"getContainer")) -- includes corpse/other single-container objects
         local n=IT.call(obj,"getContainerCount")
         for i=0,(n or 0)-1 do add(obj:getContainerByIndex(i)) end
         if instanceof(obj,"BaseVehicle") then
             for i=0,obj:getPartCount()-1 do add(obj:getPartByIndex(i):getItemContainer()) end
         end
     end
-    local loot=getPlayerLoot(playerNum)
-    local current=loot and loot.inventoryPane and loot.inventoryPane.inventory
-    if seen[current] then M.all(context,playerNum,current);return end
+    local page=getPlayerLoot(playerNum)
+    local pane=page and page.inventoryPane
+    local current=pane and pane.inventory
+    local floor=IT.call(current,"getType")=="floor"
+        and squares[IT.call(current,"getSourceGrid")]==true
+    -- Reuse native object resolution for displayed bags inside vehicle cargo.
+    local displayedObject=IT.call(page and page.controlsUI,"getDisplayedObject")
+    if current and (seen[current] or floor or clickedObjects[displayedObject]) then
+        M.all(context,playerNum,current,pane)
+        return
+    end
     if #targets==1 then M.all(context,playerNum,targets[1]) end
 end
 function M.inventory(playerNum,context,items)
     local actual=IT.itemsFromUI(items)
-    -- Selection acts on the displayed SOURCE list, not a bag inside that list.
-    local source=actual[1] and IT.call(actual[1],"getContainer")
-    if source and IT.Selection.findPane(playerNum,source) then M.entry(context,playerNum,source,"Select") end
-    if #actual==1 then local c=IT.call(actual[1],"getInventory");if c then M.all(context,playerNum,c) end end
+    -- Selection always belongs to the displayed SOURCE list, never bag contents.
+    local pane=IT.Selection.sourcePane(playerNum,actual)
+    local source=pane and pane.inventory
+    local root=pane and M.all(context,playerNum,source,pane)
+    if #actual~=1 then return end
+    local bag=IT.call(actual[1],"getInventory")
+    if not bag or bag==source then return end
+    if not root then M.all(context,playerNum,bag);return end
+    -- Preserve the pre-existing bag storage actions, but name that subtarget.
+    -- This avoids two indistinguishable Inventory Tags roots or a Select action
+    -- that silently switches from the source list to a bag inside it.
+    if IT.Store.isSupported(bag) then
+        local any=false
+        for _,kind in ipairs({"Categories","Sort","Auto"}) do
+            if M.available(kind,bag) then any=true;break end
+        end
+        if not any then return end
+        root._InventoryTagsBagEntries=root._InventoryTagsBagEntries or {}
+        if root._InventoryTagsBagEntries[bag] then return end
+        local label=IT.call(actual[1],"getDisplayName") or IT.text("GroupContainers")
+        local child=submenu(root,label)
+        child._InventoryTagsEntries={}
+        for _,kind in ipairs({"Categories","Sort","Auto"}) do M.entry(child,playerNum,bag,kind) end
+        root._InventoryTagsBagEntries[bag]=child
+    end
 end
 function M.empty(playerNum,context,isLoot)
     local page=isLoot and getPlayerLoot(playerNum) or getPlayerInventory(playerNum)
-    if page and page.inventoryPane then M.all(context,playerNum,page.inventoryPane.inventory) end
+    local pane=page and page.inventoryPane
+    if pane then M.all(context,playerNum,pane.inventory,pane) end
 end

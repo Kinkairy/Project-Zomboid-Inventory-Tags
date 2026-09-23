@@ -4,8 +4,8 @@
 
 Lua-only storage management for **Project Zomboid B42.20**. Mod ID: `InventoryTags`.
 
-**Current source: 0.1.2-SELECT2, test build.** Minimum declared game version: 42.20.2.
-Client/server multiplayer paths are included. SELECT2 has offline tests, not
+**Current source: 0.1.2-SELECT3, test build.** Minimum declared game version: 42.20.2.
+Client/server multiplayer paths are included. SELECT3 has offline tests, not
 completed in-game controller, multiplayer, or other-mod certification.
 Existing Workshop item: `3806178177`. This source update does not publish it.
 
@@ -27,13 +27,20 @@ craft/timed actions. Consumed inputs must come from the selected container;
 accessible character-carried keep-items may be used. Native action receipts
 identify outputs before returning them through normal transfer actions.
 
-**Select:** select actual items in the currently displayed inventory/loot list
-by the same parent groups and native categories. Click a group or child to
-apply once, replacing the selection with that category only. Menu ticks follow
-only the hovered row and clear on click/close; no category choices are remembered.
-Button order: Select, Categories, Sort, Auto Pack. No auto-taking or transfer is
-performed. Fully matching stacks collapse for complete native stack selection.
-See [selection controls and test scope](docs/selection.md).
+**Select:** one-shot category selection for the currently displayed native
+inventory or loot list, including character inventory, bags, storage furniture,
+vehicle cargo/seats, corpses, functional appliances and floor lists. All buttons
+and context-menu entry points use the same displayed-list check, independent of
+the storage whitelist. Right-click entries are under **Inventory Tags > Select**;
+button and menu order is Select, Categories, Sort, Auto Pack. The latter three
+remain limited to their existing supported storage containers.
+
+Menu ticks follow only the hovered row and clear on click/close. A category click
+replaces the current selection; it does not remember category choices, transfer
+items, or change storage rules. World right-click selection is available only for
+the clicked container/square already displayed in the loot window, not unopened
+or distant containers. Fully matching stacks collapse for complete native stack
+selection. See [selection controls and test scope](docs/selection.md).
 
 The four features have independent sandbox switches. Native context menus and
 inventory-window controls provide the UI, including controller navigation.
@@ -41,8 +48,8 @@ Storage-rule targets are dedicated storage: approved furniture/container types,
 portable bags, and recognized vehicle cargo compartments. Floor views, character
 main inventories, and functional appliances are not generic rule targets.
 Original capacity, access and item-acceptance restrictions remain authoritative.
-Select can also operate on the character main inventory; this does not turn it
-into a storage-rule target.
+Selection on an appliance or floor list does not enable storage rules, sorting
+or packing for that target. Custom replacement UIs are not certified.
 
 ## 分类 / 分類
 
@@ -62,7 +69,7 @@ menu entries; this is not deletion of game items or the animal system.
 ## Source layout and local testing
 
 ```text
-workshop/Contents/mods/InventoryTags/  # 38-file SELECT2 test runtime
+workshop/Contents/mods/InventoryTags/  # 38-file SELECT3 test runtime
 translations/catalog.json            # reviewed EN/CN/CH rows
 translations/generate.py             # check by default; explicit --write to regenerate
 docs/                                # grouping and validation scope
@@ -82,7 +89,7 @@ python tools/verify_runtime.py
 python translations/generate.py
 ```
 
-The manifest is pinned to SELECT2 with unchanged icon/poster integration. Any future intentional runtime change must receive
+The manifest is pinned to SELECT3 with unchanged icon/poster integration. Any future intentional runtime change must receive
 its own review and updated manifest. Edit trilingual rows together, then explicitly
 run `python translations/generate.py --write` and review the generated diff.
 Vanilla child-category translations are not republished by this mod.

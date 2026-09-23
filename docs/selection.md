@@ -1,53 +1,49 @@
-# Category-based selection / 按分类选取 — 0.1.2-SELECT2
+# 按分类选取 / Category-based Select — 0.1.2-SELECT3
 
-## 操作
+## 统一入口
 
-物品栏/拾取栏增加原生风格“选取 / Select”按钮。
-点击“选取 → 一级分组”即选中该组物品；向右进入二级后点击则按原生二级选取。
-菜单勾号只跟随当前悬停行（手柄为当前聚焦行）；移开、关闭、点击后清除。
-每次点击只选本次指定分类，不累积上一次分类；再次点击同一分类仍执行选取。
-不再提供需要记住分类条件的“选中匹配物品”；“批量 → 全选 / 取消选取”保留。
-按钮从左到右为：选取、分类、排序、自动打包。
-每次执行替换本窗格当前选中状态，不清除另一侧物品栏的选择。
+按钮、物品右键、空白列表右键、世界容器右键和手柄菜单均使用同一可用性检查：
+选取功能已开启，目标仍在该玩家原生物品栏/拾取栏中显示，且有物品列表。
+不使用储物标签白名单，不要求容器设置存放分类。
 
-不保存分类选取条件；关闭或重新打开菜单时没有持续勾选。
-它不读取或改写 Store 分类记录，不复制箱子“允许存放”勾选，不保存至 ModData。
-主物品栏也可以选取；所有选择只针对当前显示的列表，不扫描其他箱子或包中包。
-收藏、装备不影响“选中”；后续玩家主动发起的转移仍受原版及已有过滤规则约束。
+- 人物、背包、箱柜、车辆货物/座位、尸体、冰箱/冷冻柜/微波炉/洗衣机等功能性容器均可选取。
+- 地面注册独立的原生 Floor handler，只增加选取，不增加储物分类、排序或自动打包。
+- 所有右键入口为“库存标签 → 选取 → 一级/二级分类”；有其他管理项时选取排第一。
+- 两侧普通容器按钮为“选取、分类、排序、自动打包”；不适用的原有功能不会显示。
+- 世界右键仅对与点击对象或地面格匹配的当前列表提供选取；不自动打开其他箱子。
+- 物品右键按当前列表的直接成员确定来源，兼容没有常规所属容器的地面物品。
+- 右键包中包仍选当前来源列表；原有包的管理项保留在以包名标识的子菜单中，不递归选包内物品。
 
-## 原生选中与堆叠
+## 一次性操作
 
-- 写入真实的 `ISInventoryPane.selected` 和对应可见行；不是悬停高亮。
-- 执行前刷新当前窗格，按当前对象取行，不使用菜单打开时的陈旧行号。
-- 整叠都匹配时折叠选中原生堆叠头，确保超过50件的堆叠仍可被原生右键操作完整解析。
-- 同名、不同分类的混合堆叠展开后只选匹配子项，绝不误选整个头。
-- 极端混合堆叠的匹配子项落在原版50个展开子项范围之外时，明确提示并不执行新选择；
-  不更改原版全局渲染上限，不悄悄选错或漏选后报告成功。
-- 手柄菜单支持父项切换和右键/右方向进入二级。手柄原生每帧清空多选的路径仅对本次
-  选取做局部保持；移动光标、改变选择、更换/刷新容器或物品移出即放回原版行为。
-  这是一次性选择，不是每帧按分类自动选中新到物品。
+点击一级选该组，点击二级只选该原生分类。菜单勾号只随悬停/手柄焦点显示，
+点击、移开或关闭后清除；已选物品保持原生多选状态。再次选另一类替换本次选择，
+不累积条件，不保存分类勾选。保留“批量 → 全选 / 取消选取”。
 
-## Scope
+只改变当前窗格的 UI 选择，不清除另一侧选择，不搬运、不丢弃、不制作，不写 Store/ModData。
+容器切换、关闭/折叠窗口、容器按钮消失或来源不明确时不操作陈旧目标。
 
-Select changes only UI selection. No take/transfer/drop/craft action is queued.
-Container icons, world sprites, capacity, category mapping, storage records,
-protocol 6, original packing/filter/server logic, and approved artwork are unchanged.
-An independent EnableSelection sandbox option defaults on.
-EN/CN/CH rows and generated fallback outputs are updated together.
+## 保持不变
 
-## Evidence and tests
+存放标签、分类映射、过滤、排序、自动打包、服务端/网络协议6及所有图片均不改变。
+EnableSelection 仍为独立开关，关闭原存放分类不关闭选取。
+完全匹配的大堆叠用原生折叠头完整选取；同名混合分类仅选匹配子项。
+匹配子项超出原版展开行数的极端混合堆叠仍明确提示，不改全局行数上限。
 
-SELECT2 baseline: public `c10c8b3eca90fbc7e2511f3b932125f2c7fb48aa`, private
-`c77b38acbad60616a7bf425712dda4b3aff166da`; baseline runtime
-`0bd1a3d8f54a38127dc68753d762585cf407c426`.
-Native UI reference: B42.20.2 source mirror commit
-`8a906692ac56f9d40c078d654eea6c70491cbc62`, file
-`client/ISUI/ISInventoryPane.lua` (blob `86474365bbe51dc31f9cf0d85ecfde3b8272ffa1`).
-The reference covers selectIndex, native item flattening, controller update clearing,
-refreshContainer grouping, and renderdetails row limits. This is not a claim that
-we read the owner's installed 42.20.4 Java/Kahlua runtime.
+## Validation boundary
 
-Run from this repository root:
+The common predicate applies to standard native inventory/loot lists, not every
+third-party replacement inventory UI. A displayed container is not permission to
+transfer its contents: any later action remains subject to native rules.
+Tests use the actual Selection, Menu, Categories and Controls Lua modules against
+explicit UI/Java-list surrogates. They cover routing, source identity, hover ticks,
+selection, native stacking conventions and controller retention; no real PZ engine,
+Windows UI or multiplayer acceptance is claimed.
+
+Baseline: public 34fdb85a4022abb60922e4a25dfc0b21957cc22a;
+private d51d07c09b8509bbfa391c6b77cc28705f4a9412 (preserve concurrent Survivor's Song work).
+Native reference: B42.20.2 Lua mirror 8a906692ac56f9d40c078d654eea6c70491cbc62,
+ISLootWindowContainerControls.lua, ISLootWindowFloorControlHandler.lua and ISInventoryPane.lua.
 
 ```sh
 lua tests/selection.lua
@@ -55,11 +51,7 @@ python translations/generate.py
 python tools/verify_runtime.py
 ```
 
-Tests execute the real new selection, shared classification, menu and controls
-modules against explicit surrogate Java lists/native row and controller contracts.
-They are offline tests, not PZ engine acceptance, Windows UI testing or multiplayer
-certification. No NUC/source deployment or Steam upload is performed by this commit.
-
-The older R8 deployment package remains pinned to LT9; it does not install SELECT1.
-The R9.1 media-only package also does not deploy runtime changes. Do not use either
-as evidence that this test build is installed or published.
+The R11 deployment package updates only existing Workshop item 3806178177 with
+this pinned runtime, unchanged cover and bilingual description. It does not
+upload or clear gallery images/tags, install server runtime, start the game, or
+change saves/configuration. Source commits alone are not actual deployment.

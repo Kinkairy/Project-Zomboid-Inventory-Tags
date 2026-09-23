@@ -5,25 +5,81 @@ require "ISUI/ISModalDialog"
 local IT=InventoryTags
 IT.Selection=IT.Selection or {}
 local S=IT.Selection
--- SELECT2: one-shot category actions; menu ticks follow hover, never a saved rule.
+-- SELECT3: one-shot category actions; menu ticks follow hover, never a saved rule.
 S.choices=nil -- discard an older loaded module's UI-only choices, not ModData
 S.holds=S.holds or setmetatable({},{__mode="k"})
-function S.findPane(playerNum,c)
+-- All entry points resolve an already displayed native list. No storage whitelist.
+local function displays(page,pane,c)
+    if not page or page.inventoryPane~=pane or pane.inventory~=c then return false end
+    if IT.call(page,"getIsVisible")==false or page.isCollapsed==true then return false end
+    -- A stale selected inventory can survive briefly after its container button
+    -- disappears (distance/lock/UI refresh). Do not expose that stale list.
+    if type(page.backpacks)=="table" then
+        for _,button in ipairs(page.backpacks) do
+            if button.inventory==c then return true end
+        end
+        return false
+    end
+    return true
+end
+function S.findPane(playerNum,c,preferred)
+    if playerNum==nil or c==nil then return nil end
     local found
     for _,getPage in ipairs({getPlayerInventory,getPlayerLoot}) do
         local page=getPage(playerNum)
         local pane=page and page.inventoryPane
-        if pane and pane.inventory==c then
+        if pane and displays(page,pane,c) then
+            if preferred==pane then return pane end
+            if found and found~=pane then found=false else found=found or pane end
+        end
+    end
+    if preferred then return nil end
+    return found or nil
+end
+function S.available(pane,c)
+    return IT.selectionEnabled() and pane~=nil and c~=nil and pane.inventory==c
+        and S.findPane(pane.player,c,pane)==pane
+        and type(pane.refreshContainer)=="function" and type(pane.selected)=="table"
+        and IT.call(c,"getItems")~=nil
+end
+-- Floor/world items need not report the temporary floor-list container as owner.
+-- Membership in the displayed list is authoritative; never descend into bags.
+function S.containsItems(c,wanted)
+    local remaining={}
+    local count=0
+    for item in pairs(wanted) do remaining[item]=true;count=count+1 end
+    if count==0 then return false end
+    local items=IT.call(c,"getItems")
+    if not items then return false end
+    for i=0,items:size()-1 do
+        local item=items:get(i)
+        if remaining[item] then remaining[item]=nil;count=count-1 end
+    end
+    return count==0
+end
+function S.sourcePane(playerNum,items)
+    if #items==0 then return nil end
+    local wanted={}
+    for _,item in ipairs(items) do wanted[item]=true end
+    local found
+    for _,getPage in ipairs({getPlayerInventory,getPlayerLoot}) do
+        local page=getPage(playerNum)
+        local pane=page and page.inventoryPane
+        local c=pane and pane.inventory
+        if S.available(pane,c) and S.containsItems(c,wanted) then
             if found and found~=pane then return nil end
             found=pane
         end
     end
     return found
 end
-function S.available(pane,c)
-    return IT.selectionEnabled() and pane~=nil and c~=nil and pane.inventory==c
-        and type(pane.refreshContainer)=="function" and type(pane.selected)=="table"
-        and IT.call(c,"getItems")~=nil
+local function holdItemsPresent(c,wanted)
+    if not S.containsItems(c,wanted) then return false end
+    if IT.call(c,"getType")=="floor" then return true end
+    for item in pairs(wanted) do
+        if IT.call(item,"getContainer")~=c then return false end
+    end
+    return true
 end
 local function sameRows(a,b)
     for k,v in pairs(a or {}) do if not b or b[k]~=v then return false end end
@@ -88,7 +144,7 @@ function S.apply(pane,c,rule)
     if not player or IT.call(player,"isAsleep")==true then return nil,"SelectionUnavailable" end
     -- Refresh only this pane, then work on live objects, never cached row indices.
     pane:refreshContainer()
-    if pane.inventory~=c then return nil,"SelectionUnavailable" end
+    if not S.available(pane,c) then return nil,"SelectionUnavailable" end
     local plan,err=S.plan(pane,c,rule)
     if not plan then return nil,err end
     pane.collapsed=plan.collapse
@@ -193,17 +249,11 @@ function S.updateHold(pane,native,...)
     local h=S.holds[pane]
     local keep=h and IT.selectionEnabled() and pane.doController and pane.inventory==h.container
         and pane.itemslist==h.list and pane.joyselection==h.focus and sameRows(pane.selected,h.selected)
-    if keep then
-        for item in pairs(h.items) do
-            if IT.call(item,"getContainer")~=h.container then keep=false;break end
-        end
-    end
+    if keep then keep=holdItemsPresent(h.container,h.items) end
     local result=native(pane,...)
     if keep and pane.inventory==h.container and pane.itemslist==h.list and pane.joyselection==h.focus
         and (pane.player~=0 or (wasMouseActiveMoreRecentlyThanJoypad and wasMouseActiveMoreRecentlyThanJoypad()==false)) then
-        for item in pairs(h.items) do
-            if IT.call(item,"getContainer")~=h.container then keep=false;break end
-        end
+        keep=holdItemsPresent(h.container,h.items)
         if keep and not IT.hasEntries(pane.selected) then pane.selected=IT.copy(h.selected) else keep=false end
     else keep=false end
     if not keep then S.holds[pane]=nil end

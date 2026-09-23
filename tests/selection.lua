@@ -241,11 +241,11 @@ local base={}
 function base:derive(name)local cls={Type=name};setmetatable(cls,{__index=self});return cls end
 function base:new()return setmetatable({},{__index=self})end
 function base:getButtonControl(text)return {title=text}end
-ISLootWindowObjectControlHandler=base;ISInventoryWindowControlHandler=base
-local lhandlers,ihandlers={},{}
-ISLootWindowContainerControls={AddHandler=function(c)lhandlers[#lhandlers+1]=c end}
+ISLootWindowObjectControlHandler=base;ISInventoryWindowControlHandler=base;ISLootWindowFloorControlHandler=base
+local lhandlers,ihandlers,fhandlers={},{},{}
+ISLootWindowContainerControls={AddHandler=function(c)lhandlers[#lhandlers+1]=c end,AddFloorHandler=function(c)fhandlers[#fhandlers+1]=c end}
 ISInventoryWindowContainerControls={AddHandler=function(c)ihandlers[#ihandlers+1]=c end,arrange=function()end}
-for _,n in ipairs({'ISUI/LootWindow/ISLootWindowContainerControls','ISUI/LootWindow/ISLootWindowObjectControlHandler','ISUI/InventoryWindow/ISInventoryWindowContainerControls','ISUI/InventoryWindow/ISInventoryWindowControlHandler'})do package.loaded[n]=true end
+for _,n in ipairs({'ISUI/LootWindow/ISLootWindowContainerControls','ISUI/LootWindow/ISLootWindowObjectControlHandler','ISUI/LootWindow/ISLootWindowFloorControlHandler','ISUI/InventoryWindow/ISInventoryWindowContainerControls','ISUI/InventoryWindow/ISInventoryWindowControlHandler'})do package.loaded[n]=true end
 require 'InventoryTags/InventoryTags_Controls'
 test('four native handlers on each pane, registration idempotent',function()
  eq(#lhandlers,4);eq(#ihandlers,4)
@@ -272,8 +272,7 @@ test('EN CN CH selection labels exist',function()
  for _,lang in ipairs({'EN','CN','CH'})do Translator={getLanguage=function()return {name=function()return lang end}end};assert(IT.text('Select')~='IGUI_InventoryTags_Select')end
  Translator=nil
 end)
--- Execute the reference onHighlight invocation signature: option receives itself,
--- the native owning menu and a boolean (onHighlightParams is a required table).
+-- Execute the native onHighlight signature, not a replacement renderer.
 local function hover(owner,o,on) o:onHighlight(owner,on,table.unpack(o.onHighlightParams)) end
 local function allTicks(context,out)
  out=out or {};for _,o in ipairs(context.options)do
@@ -291,7 +290,6 @@ test('hover child replaces parent tick across the menu chain',function()
  local p,c=pane({item('Material'),item('MaterialWeapon')});local ctx=menu(p,c)
  local a=named(ctx,IT.text('GroupMaterials'));local b=named(a.child,C.label('Material'))
  hover(ctx,a,true);hover(a.child,b,true);eq(a.checked,false);eq(b.checked,true);eq(#allTicks(ctx),1)
- -- Delayed parent out event must not remove the current child tick.
  hover(ctx,a,false);eq(b.checked,true)
  hover(a.child,b,false);eq(#allTicks(ctx),0)
 end)
@@ -329,7 +327,159 @@ test('both button registrations produce Select Categories Sort Auto in native or
  local expected={'Select','Categories','Sort','Auto'}
  for i,name in ipairs(expected)do
   eq(ihandlers[i].Type,'InventoryTagsPersonal'..name)
-  eq(lhandlers[5-i].Type,'InventoryTagsNative'..name) -- native right strip grows leftward
+  eq(lhandlers[5-i].Type,'InventoryTagsNative'..name)
  end
 end)
-print('PASS: '..tests..' selection tests; no engine/Steam/NUC execution.')
+-- SELECT3 entry routing cases. Storage and network *writes* remain poison pills.
+function isClient()return false end
+IT.Store.get=function()return {all=true,categories={}}end
+IT.Store.selected=function()return true end
+IT.Network.ensure=function()end
+IT.Sort.groups={};IT.Sort.get=function()return 'native' end
+local filterCalls=0
+IT.Filter.apply=function(c)assert(c.storage);filterCalls=filterCalls+1 end
+local originalInstanceof=instanceof
+function instanceof(x,c) return originalInstanceof(x,c) or (type(x)=='table' and x._vehicle==true and c=='BaseVehicle') end
+local function rootSelect(ctx)
+ eq(#ctx.options,1,'one namespace root')
+ local root=named(ctx,IT.text('Project')).child
+ eq(root.options[1].name,IT.text('Select'),'Select before storage actions')
+ return root,named(root,IT.text('Select')).child
+end
+local function verifyMedical(ctx,p)
+ local root,sub=rootSelect(ctx)
+ clicked(named(sub,IT.text('GroupMedical')))
+ local out=selectedItems(p);eq(#out,1);eq(out[1].cat,'FirstAid');eq(writes,0)
+ return root
+end
+local kinds={'inventory','bag','crate','fridge','freezer','microwave','stove','clothingwasher','clothingdryer','vehicle','corpse','floor','Mod.CustomContainer'}
+for _,kind in ipairs(kinds) do
+ test('unified item/empty/button/controller entries for '..kind,function()
+  local a,b=item('FirstAid'),item('Food');local p,c=pane({a,b});c.storage=(kind=='crate' or kind=='bag')
+  function c:getType()return kind end
+  p.parent.backpacks={{inventory=c}}
+  local ctx=ui:new();M.inventory(0,ctx,{a});local root=verifyMedical(ctx,p)
+  if not c.storage then eq(#root.options,1,'no storage-rule actions on non-storage container')end
+  ctx=ui:new();M.empty(0,ctx,false);verifyMedical(ctx,p)
+  local h=ihandlers[1]:new();h.inventoryWindow=p.parent;h.playerNum=0
+  eq(h:shouldBeVisible(),true);ctx=ui:new();h:handleJoypadContextMenu(ctx);verifyMedical(ctx,p)
+  loot=p.parent;inv=nil
+  ctx=ui:new();M.empty(0,ctx,true);verifyMedical(ctx,p)
+  local lh=(kind=='floor' and fhandlers[1] or lhandlers[4]):new();lh.lootWindow=loot;lh.playerNum=0
+  eq(lh:shouldBeVisible(),true);ctx=ui:new();lh:handleJoypadContextMenu(ctx);verifyMedical(ctx,p)
+  local before=ISContextMenu.get;ctx=ui:new();ISContextMenu.get=function()return ctx end
+  lh:getControl();lh.control.getAbsoluteX=function()return 0 end;lh.control.getAbsoluteY=function()return 0 end;lh.control.getHeight=function()return 20 end
+  lh:perform();clicked(named(ctx,IT.text('GroupMedical')));eq(#selectedItems(p),1);ISContextMenu.get=before
+ end)
+end
+for _,kind in ipairs({'crate','fridge','microwave','clothingwasher','corpse','Mod.CustomContainer'}) do
+ test('world right-click displayed '..kind..' bypasses ONLY the selection whitelist',function()
+  local a,b=item('FirstAid'),item('Food');local p,c=pane({a,b});c.storage=(kind=='crate');function c:getType()return kind end
+  loot=p.parent;inv=nil;local obj={getContainer=function()return c end}
+  local old=filterCalls;local ctx=ui:new();M.world(0,ctx,{obj},false);verifyMedical(ctx,p)
+  eq(filterCalls-old,c.storage and 1 or 0)
+ end)
+end
+test('world floor entry matches the current square, not a distant click',function()
+ local p,c=pane({item('FirstAid'),item('Food')});c.storage=false;local square={}
+ function c:getType()return 'floor'end;function c:getSourceGrid()return square end
+ loot=p.parent;inv=nil
+ local ctx=ui:new();M.world(0,ctx,{{getSquare=function()return square end}},false);verifyMedical(ctx,p)
+ ctx=ui:new();M.world(0,ctx,{{getSquare=function()return {} end}},false);eq(#ctx.options,0)
+end)
+test('vehicle multi-container uses the displayed part only',function()
+ local p,c=pane({item('FirstAid'),item('Food')});c.storage=false;loot=p.parent;inv=nil
+ local other={getItems=function()return list({})end}
+ local parts={{getItemContainer=function()return other end},{getItemContainer=function()return c end}}
+ local vehicle={_vehicle=true,getPartCount=function()return 2 end,getPartByIndex=function(_,i)return parts[i+1]end}
+ local ctx=ui:new();M.world(0,ctx,{vehicle},false);verifyMedical(ctx,p)
+end)
+test('displayed vehicle bag reuses native object identity',function()
+ local p,c=pane({item('FirstAid')});c.storage=false;loot=p.parent;inv=nil;local vehicle={}
+ loot.controlsUI={getDisplayedObject=function()return vehicle end}
+ local ctx=ui:new();M.world(0,ctx,{vehicle},false);verifyMedical(ctx,p)
+ ctx=ui:new();M.world(0,ctx,{{}},false);eq(#ctx.options,0)
+end)
+test('world dropped bag targets its displayed inventory',function()
+ local p,c=pane({item('FirstAid')});c.storage=false;loot=p.parent;inv=nil
+ local bag={getInventory=function()return c end};local world={getItem=function()return bag end}
+ local ctx=ui:new();M.world(0,ctx,{world},false);verifyMedical(ctx,p)
+end)
+test('right-clicking a bag item never selects its contents; old bag controls have named child',function()
+ local a,b=item('FirstAid'),item('Bag');local p,c=pane({a,b});c.storage=false
+ local inner={storage=true,getItems=function()return list({item('Food')})end}
+ function b:getInventory()return inner end;function b:getDisplayName()return 'Medical Bag' end
+ local ctx=ui:new();M.inventory(0,ctx,{b});local root=verifyMedical(ctx,p)
+ local bagMenu=named(root,'Medical Bag').child;eq(#bagMenu.options,3);eq(bagMenu.options[1].name,IT.text('Categories'))
+ eq(#c.items,2);eq(writes,0)
+end)
+test('no visible source rejects mixed-container item lists',function()
+ local a,b=item('FirstAid'),item('Food');local p,c=pane({a,b});c.storage=false;b.container={};c.items={a}
+ local ctx=ui:new();M.inventory(0,ctx,{a,b});eq(#ctx.options,0)
+end)
+test('hidden collapsed removed or switched page cannot select',function()
+ local p,c=pane({item('FirstAid')});c.storage=false
+ p.parent.getIsVisible=function()return false end;eq(S.available(p,c),false);eq(M.available('Select',c,0,p),false)
+ p.parent.getIsVisible=nil;p.parent.isCollapsed=true;eq(S.available(p,c),false)
+ p.parent.isCollapsed=false;p.parent.backpacks={};eq(S.available(p,c),false)
+ p.parent.backpacks={{inventory=c}};eq(S.available(p,c),true)
+ p.inventory={};eq(M.available('Select',c,0,p),false)
+end)
+test('container disappears during refresh: no stale selection written',function()
+ local p,c=pane({item('FirstAid')});p.parent.backpacks={{inventory=c}}
+ local native=p.refreshContainer;p.refreshContainer=function(self)native(self);self.parent.backpacks={}end
+ local n,e=S.apply(p,c,rule({'FirstAid'}));eq(n,nil);eq(e,'SelectionUnavailable')
+end)
+test('selection switch disables all five entry paths; other switches do not',function()
+ local p,c=pane({item('FirstAid')});c.storage=false;function c:getType()return 'floor'end
+ SandboxVars.InventoryTags.EnableSelection=false
+ local ctx=ui:new();M.inventory(0,ctx,c.items);eq(#ctx.options,0)
+ M.empty(0,ctx,false);eq(#ctx.options,0);eq(M.available('Select',c,0,p),false)
+ loot=p.parent;inv=nil;ctx=ui:new();M.world(0,ctx,{{getContainer=function()return c end}},false);eq(#ctx.options,0)
+ local h=fhandlers[1]:new();h.lootWindow=loot;h.playerNum=0;eq(h:shouldBeVisible(),false)
+ SandboxVars.InventoryTags.EnableSelection=nil
+ SandboxVars.InventoryTags.EnableCategories=false;SandboxVars.InventoryTags.EnableSorting=false;SandboxVars.InventoryTags.EnableAutoOrganize=false
+ eq(h:shouldBeVisible(),true);ctx=ui:new();h:handleJoypadContextMenu(ctx);verifyMedical(ctx,p)
+ SandboxVars.InventoryTags={}
+end)
+test('one namespace deduplicates repeated controller and item callbacks',function()
+ local p,c=pane({item('FirstAid')});c.storage=false;local ctx=ui:new()
+ M.inventory(0,ctx,c.items);M.inventory(0,ctx,c.items);M.all(ctx,0,c,p);verifyMedical(ctx,p)
+end)
+test('stale menu item callback does not select a newly opened container',function()
+ local p,c=pane({item('FirstAid')});c.storage=false;local ctx=ui:new();M.inventory(0,ctx,c.items)
+ local _,sub=rootSelect(ctx);p.inventory={};clicked(named(sub,IT.text('GroupMedical')));eq(#selectedItems(p),0)
+end)
+test('unopened storage world menu keeps old actions without selecting distant items',function()
+ local p,c=pane({item('Food')});c.storage=false;loot=p.parent;inv=nil
+ local target={storage=true,getItems=function()return list({})end}
+ local ctx=ui:new();M.world(0,ctx,{{getContainer=function()return target end}},false)
+ local root=named(ctx,IT.text('Project')).child;eq(#root.options,3);eq(root.options[1].name,IT.text('Categories'));eq(#selectedItems(p),0)
+end)
+test('world test probe creates no menus or filter side effects',function()
+ local p,c=pane({item('Food')});local ctx=ui:new();local before=filterCalls
+ M.world(0,ctx,{{getContainer=function()return c end}},true);eq(#ctx.options,0);eq(filterCalls,before)
+end)
+test('floor handler registration remains singular after repeated module load',function()
+ eq(#fhandlers,1);package.loaded['InventoryTags/InventoryTags_Controls']=nil;require 'InventoryTags/InventoryTags_Controls';eq(#fhandlers,1)
+end)
+test('explicit origin disambiguates mirrored container for empty-list and controller routes',function()
+ local p,c=pane({item('FirstAid')});c.storage=false
+ local mirror={inventory=c,player=0,selected={},refreshContainer=p.refreshContainer}
+ loot={inventoryPane=mirror};mirror.parent=loot
+ eq(S.findPane(0,c),nil);eq(S.findPane(0,c,p),p);eq(S.findPane(0,c,mirror),mirror)
+ local ctx=ui:new();M.empty(0,ctx,false);verifyMedical(ctx,p)
+end)
+test('floor item context and controller selection work without item container ownership',function()
+ local a,b=item('FirstAid'),item('Food');local p,c=pane({a,b});c.storage=false
+ function c:getType()return 'floor'end;a.container=nil;b.container=nil
+ loot=p.parent;inv=nil;local ctx=ui:new();M.inventory(0,ctx,{a});verifyMedical(ctx,p)
+ p.doController=true;eq(S.apply(p,c,rule({'FirstAid'})),1);ISInventoryPane.update(p);eq(#selectedItems(p),1)
+ c.items={b};ISInventoryPane.update(p);eq(S.holds[p],nil);eq(#selectedItems(p),0)
+end)
+test('membership lookup does not recurse into an unopened bag',function()
+ local inside=item('FirstAid');local bag=item('Bag');local p,c=pane({bag});c.storage=false
+ bag.contents={inside};inside.container=c
+ local ctx=ui:new();M.inventory(0,ctx,{inside});eq(#ctx.options,0)
+end)
+print('PASS: '..tests..' offline selection/entry tests; no engine/Steam/NUC execution.')
