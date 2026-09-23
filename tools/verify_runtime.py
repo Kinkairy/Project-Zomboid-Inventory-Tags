@@ -30,7 +30,7 @@ def main():
         bad = sorted(k for k in set(actual) | set(manifest) if actual.get(k) != manifest.get(k))
         raise SystemExit('FAIL: runtime differs: ' + ', '.join(bad))
     digest = tree_hash(payload).hex()
-    if digest != 'f873f4bc13bab2d7ae9105cfb5d41dee3365ff45':
+    if digest != '328a439973a372d1d482657357d9a887aaa1fd99':
         raise SystemExit('FAIL: unexpected runtime tree ' + digest)
     print('PASS: 38 exact SELECT3 files; runtime tree ' + digest)
 
