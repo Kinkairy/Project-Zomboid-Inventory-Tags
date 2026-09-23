@@ -1,14 +1,16 @@
-# Category-based selection / 按分类选取 — 0.1.2-SELECT1
+# Category-based selection / 按分类选取 — 0.1.2-SELECT2
 
 ## 操作
 
 物品栏/拾取栏增加原生风格“选取 / Select”按钮。
 点击“选取 → 一级分组”即选中该组物品；向右进入二级后点击则按原生二级选取。
-重开菜单可再勾选另一类，多类取并集；再次点击已勾选项则取消该类。
-“选中匹配物品”重用本容器刚才的条件；“批量 → 全选 / 取消选取”分别全选与清空。
+菜单勾号只跟随当前悬停行（手柄为当前聚焦行）；移开、关闭、点击后清除。
+每次点击只选本次指定分类，不累积上一次分类；再次点击同一分类仍执行选取。
+不再提供需要记住分类条件的“选中匹配物品”；“批量 → 全选 / 取消选取”保留。
+按钮从左到右为：选取、分类、排序、自动打包。
 每次执行替换本窗格当前选中状态，不清除另一侧物品栏的选择。
 
-条件仅在当前会话的窗格/容器组合中记忆，初始为全不选。
+不保存分类选取条件；关闭或重新打开菜单时没有持续勾选。
 它不读取或改写 Store 分类记录，不复制箱子“允许存放”勾选，不保存至 ModData。
 主物品栏也可以选取；所有选择只针对当前显示的列表，不扫描其他箱子或包中包。
 收藏、装备不影响“选中”；后续玩家主动发起的转移仍受原版及已有过滤规则约束。
@@ -35,9 +37,9 @@ EN/CN/CH rows and generated fallback outputs are updated together.
 
 ## Evidence and tests
 
-Baseline: public `307999e5f1ac91002654cc005feaddad6f25eed3`, private
-`89ba11b8677ae0c7a99f8f808ec8e531cfc9f236`; baseline runtime
-`f16bdda62b516cbf14ff7630866c3e3f0d5565d0`.
+SELECT2 baseline: public `c10c8b3eca90fbc7e2511f3b932125f2c7fb48aa`, private
+`c77b38acbad60616a7bf425712dda4b3aff166da`; baseline runtime
+`0bd1a3d8f54a38127dc68753d762585cf407c426`.
 Native UI reference: B42.20.2 source mirror commit
 `8a906692ac56f9d40c078d654eea6c70491cbc62`, file
 `client/ISUI/ISInventoryPane.lua` (blob `86474365bbe51dc31f9cf0d85ecfde3b8272ffa1`).

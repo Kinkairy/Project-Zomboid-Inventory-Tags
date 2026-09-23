@@ -4,8 +4,8 @@
 
 Lua-only storage management for **Project Zomboid B42.20**. Mod ID: `InventoryTags`.
 
-**Current source: 0.1.2-SELECT1, test build.** Minimum declared game version: 42.20.2.
-Client/server multiplayer paths are included. SELECT1 has offline tests, not
+**Current source: 0.1.2-SELECT2, test build.** Minimum declared game version: 42.20.2.
+Client/server multiplayer paths are included. SELECT2 has offline tests, not
 completed in-game controller, multiplayer, or other-mod certification.
 Existing Workshop item: `3806178177`. This source update does not publish it.
 
@@ -29,8 +29,9 @@ identify outputs before returning them through normal transfer actions.
 
 **Select:** select actual items in the currently displayed inventory/loot list
 by the same parent groups and native categories. Click a group or child to
-apply immediately; reopen to combine another category. Choices are local to the
-pane/container and separate from storage rules. No auto-taking or transfer is
+apply once, replacing the selection with that category only. Menu ticks follow
+only the hovered row and clear on click/close; no category choices are remembered.
+Button order: Select, Categories, Sort, Auto Pack. No auto-taking or transfer is
 performed. Fully matching stacks collapse for complete native stack selection.
 See [selection controls and test scope](docs/selection.md).
 
@@ -61,7 +62,7 @@ menu entries; this is not deletion of game items or the animal system.
 ## Source layout and local testing
 
 ```text
-workshop/Contents/mods/InventoryTags/  # 38-file SELECT1 test runtime
+workshop/Contents/mods/InventoryTags/  # 38-file SELECT2 test runtime
 translations/catalog.json            # reviewed EN/CN/CH rows
 translations/generate.py             # check by default; explicit --write to regenerate
 docs/                                # grouping and validation scope
@@ -81,7 +82,7 @@ python tools/verify_runtime.py
 python translations/generate.py
 ```
 
-The manifest is pinned to SELECT1 with unchanged icon/poster integration. Any future intentional runtime change must receive
+The manifest is pinned to SELECT2 with unchanged icon/poster integration. Any future intentional runtime change must receive
 its own review and updated manifest. Edit trilingual rows together, then explicitly
 run `python translations/generate.py --write` and review the generated diff.
 Vanilla child-category translations are not republished by this mod.

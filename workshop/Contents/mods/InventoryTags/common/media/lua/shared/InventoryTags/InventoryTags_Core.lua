@@ -1,6 +1,6 @@
 InventoryTags = InventoryTags or {}
 local IT = InventoryTags
-IT.VERSION = "0.1.2-SELECT1"
+IT.VERSION = "0.1.2-SELECT2"
 IT.PROTOCOL = 6
 IT.ACCEPT_FUNCTION = "InventoryTags.Filter.acceptItem"
 IT.MAX_AUTO_ORGANIZE_STEPS = 500

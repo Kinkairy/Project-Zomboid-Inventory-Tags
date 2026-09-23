@@ -5,8 +5,8 @@ require "ISUI/ISModalDialog"
 local IT=InventoryTags
 IT.Selection=IT.Selection or {}
 local S=IT.Selection
--- Choices belong to this local pane/container, NOT Store or synchronized ModData.
-S.choices=S.choices or setmetatable({},{__mode="k"})
+-- SELECT2: one-shot category actions; menu ticks follow hover, never a saved rule.
+S.choices=nil -- discard an older loaded module's UI-only choices, not ModData
 S.holds=S.holds or setmetatable({},{__mode="k"})
 function S.findPane(playerNum,c)
     local found
@@ -25,13 +25,6 @@ function S.available(pane,c)
         and type(pane.refreshContainer)=="function" and type(pane.selected)=="table"
         and IT.call(c,"getItems")~=nil
 end
-function S.rule(pane,c)
-    local byContainer=S.choices[pane]
-    if not byContainer then byContainer=setmetatable({},{__mode="k"});S.choices[pane]=byContainer end
-    if not byContainer[c] then byContainer[c]={all=false,categories={}} end
-    return byContainer[c]
-end
-local function copyRule(rule) return {all=rule.all==true,categories=IT.copy(rule.categories)} end
 local function sameRows(a,b)
     for k,v in pairs(a or {}) do if not b or b[k]~=v then return false end end
     for k,v in pairs(b or {}) do if not a or a[k]~=v then return false end end
@@ -106,8 +99,6 @@ function S.apply(pane,c,rule)
     pane.buttonOption=0
     pane.previousMouseUp=nil
     if plan.first then pane.joyselection=plan.first-1 end
-    S.rule(pane,c)
-    S.choices[pane][c]=copyRule(rule)
     S.holds[pane]=nil
     if pane.doController and plan.first then
         S.holds[pane]={container=c,list=pane.itemslist,focus=pane.joyselection,
@@ -128,45 +119,68 @@ local function execute(playerNum,pane,c,rule)
     local count,err=S.apply(pane,c,rule)
     if count==nil then report(playerNum,err) end
 end
--- Category/group clicks apply immediately. Reopen to add another category;
--- the checkmarks retain independent choices for this local pane/container.
+-- One menu invocation owns one hover tick, shared by its parent and child menus.
+-- Use the native onHighlight callback, never replace the global menu renderer.
+local function hoverOption(context,option,view,showTick)
+    context:setOptionChecked(option,false)
+    option.onHighlightParams={}
+    option.onHighlight=function(row,owner,highlighted)
+        if highlighted then
+            if view.hover then view.owner:setOptionChecked(view.hover,false) end
+            view.hover=nil;view.owner=nil
+            if showTick then
+                owner:setOptionChecked(row,true)
+                view.hover=row;view.owner=owner
+            end
+        elseif view.hover==row then
+            owner:setOptionChecked(row,false)
+            view.hover=nil;view.owner=nil
+        end
+    end
+end
+local function clearHover(view)
+    if view.hover then view.owner:setOptionChecked(view.hover,false) end
+    view.hover=nil;view.owner=nil
+end
 function S.menu(context,playerNum,c,pane,enableParentNavigation)
     pane=pane or S.findPane(playerNum,c)
     if not S.available(pane,c) then return end
     IT.Categories.keys(c)
     if enableParentNavigation then enableParentNavigation(context) end
-    local record=S.rule(pane,c)
-    context:addOption(IT.text("SelectMatches"),nil,function() execute(playerNum,pane,c,S.rule(pane,c)) end)
+    local view={}
+    local function action(owner,label,makeRule)
+        local option=owner:addOption(label,nil,function()
+            clearHover(view)
+            execute(playerNum,pane,c,makeRule())
+        end)
+        hoverOption(owner,option,view,true)
+        return option
+    end
     local bulkOption=context:addOption(IT.text("Bulk"))
+    hoverOption(context,bulkOption,view,false)
     local bulk=context:getNew(context);context:addSubMenu(bulkOption,bulk)
     for _,enabled in ipairs({true,false}) do
         local on=enabled
-        bulk:addOption(IT.text(on and "All" or "ClearSelection"),nil,function()
-            execute(playerNum,pane,c,{all=on,categories={}})
+        action(bulk,IT.text(on and "All" or "ClearSelection"),function()
+            return {all=on,categories={}}
         end)
     end
     for _,g in ipairs(IT.Categories.groups) do
         local group=g
         local keys=IT.Categories.groupKeys(group,c)
         if #keys>0 then
-            local all,partial=IT.Categories.groupState(record,group,c)
-            local parent=context:addOption(IT.text("Group"..group)..(partial and IT.text("Partial") or ""),nil,function()
-                local rule=copyRule(S.rule(pane,c))
-                local full=IT.Categories.groupState(rule,group,c)
-                for _,key in ipairs(IT.Categories.groupKeys(group,c)) do rule.categories[key]=not full end
-                execute(playerNum,pane,c,rule)
+            local parent=action(context,IT.text("Group"..group),function()
+                local rule={all=false,categories={}}
+                for _,key in ipairs(IT.Categories.groupKeys(group,c)) do rule.categories[key]=true end
+                return rule
             end)
-            context:setOptionChecked(parent,all or partial)
             if context._InventoryTagsParentCallbacks then context._InventoryTagsParentCallbacks[parent]=parent.onSelect end
             local child=context:getNew(context);context:addSubMenu(parent,child)
             for _,k in ipairs(keys) do
                 local key=k
-                local option=child:addOption(IT.Categories.label(key),nil,function()
-                    local rule=copyRule(S.rule(pane,c))
-                    rule.categories[key]=not IT.Categories.selected(rule,key)
-                    execute(playerNum,pane,c,rule)
+                action(child,IT.Categories.label(key),function()
+                    return {all=false,categories={[key]=true}}
                 end)
-                child:setOptionChecked(option,IT.Categories.selected(record,key))
             end
         end
     end

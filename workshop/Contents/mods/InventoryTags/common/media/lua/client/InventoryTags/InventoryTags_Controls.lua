@@ -20,7 +20,7 @@ if not U.installed then
     -- Exactly the StoveSettings/Microwave pattern: native object handler,
     -- altColor=true, native getButtonControl(), native right-side registration.
     -- No custom panel, background, button, font, minimum width or arrange hook.
-    for _,name in ipairs({"Select","Auto","Sort","Categories"}) do
+    for _,name in ipairs({"Auto","Sort","Categories","Select"}) do
         local kind=name
         local class=ISLootWindowObjectControlHandler:derive("InventoryTagsNative"..name)
         function class:new()
@@ -44,7 +44,7 @@ if not U.installed then
     -- The personal-inventory strip has a separate native handler class.
     -- Reuse its button creation too; never borrow a loot handler on that side.
     U.inventoryClasses={}
-    for _,name in ipairs({"Categories","Sort","Auto","Select"}) do
+    for _,name in ipairs({"Select","Categories","Sort","Auto"}) do
         local kind=name
         local class=ISInventoryWindowControlHandler:derive("InventoryTagsPersonal"..name)
         function class:new()
