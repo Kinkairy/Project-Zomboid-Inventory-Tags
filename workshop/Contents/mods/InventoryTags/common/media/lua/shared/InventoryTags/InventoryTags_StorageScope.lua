@@ -15,7 +15,7 @@ P.worldTypes={
     suitcase=true,storage=true,container=true,
 }
 P.vehicleStorage={truckbed=true,trunk=true,glovebox=true,trailertrunk=true,
-    roofrack=true,storage=true,cargo=true,cargostorage=true}
+    roofrack=true,storage=true,cargo=true,cargostorage=true,overhead=true}
 -- Exclusions are based on raw container IDs / engine classes, not translated
 -- object names. An unpowered fridge is still a fridge.
 local functionalWords={"fridge","freezer","refrigerat","microwave","stove","oven",
