@@ -73,6 +73,13 @@ if not IT.ClientHooksInstalled then
     end
     IT.addEvent("OnFillWorldObjectContextMenu",IT.Menu.world)
     IT.addEvent("OnFillInventoryObjectContextMenu",IT.Menu.inventory)
+    -- B42.21's native createMenuNoItems triggers this event before the engine
+    -- has registered it. Use the native event API so both mouse and controller
+    -- menus can attach this callback; preserve an existing event/listeners.
+    if Events and not Events.OnFillInventoryContextMenuNoItems
+        and LuaEventManager and LuaEventManager.AddEvent then
+        LuaEventManager.AddEvent("OnFillInventoryContextMenuNoItems")
+    end
     IT.addEvent("OnFillInventoryContextMenuNoItems",IT.Menu.empty)
     IT.addEvent("OnRefreshInventoryWindowContainers",refresh)
     IT.addEvent("OnTick",IT.Filter.refreshBound)

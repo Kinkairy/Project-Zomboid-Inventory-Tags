@@ -3,6 +3,7 @@
 local root="workshop/Contents/mods/InventoryTags/common/media/lua/"
 package.path=root.."client/?.lua;"..root.."shared/?.lua;"..package.path
 local tests=0
+local unpackValues=table.unpack or unpack
 local function eq(a,b,msg) assert(a==b,(msg or "mismatch")..": "..tostring(a).." ~= "..tostring(b)) end
 local function test(name,fn) fn();tests=tests+1;print("PASS "..name) end
 local function list(t) return {size=function() return #t end,get=function(_,i) return t[i+1] end} end
@@ -273,7 +274,7 @@ test('EN CN CH selection labels exist',function()
  Translator=nil
 end)
 -- Execute the native onHighlight signature, not a replacement renderer.
-local function hover(owner,o,on) o:onHighlight(owner,on,table.unpack(o.onHighlightParams)) end
+local function hover(owner,o,on) o:onHighlight(owner,on,unpackValues(o.onHighlightParams)) end
 local function allTicks(context,out)
  out=out or {};for _,o in ipairs(context.options)do
   if o.checked then out[#out+1]=o end
@@ -482,4 +483,83 @@ test('membership lookup does not recurse into an unopened bag',function()
  bag.contents={inside};inside.container=c
  local ctx=ui:new();M.inventory(0,ctx,{inside});eq(#ctx.options,0)
 end)
+
+-- The native empty-list entry point is shared by mouse and controller paths.
+-- Execute its installed source instead of duplicating its event/menu ordering.
+local nativePath=arg and arg[1]
+if nativePath then
+ local f=assert(io.open(nativePath,'r'));local native=f:read('*a');f:close()
+ local begin=assert(native:find('ISInventoryPaneContextMenu.createMenuNoItems = function',1,true))
+ local finish=assert(native:find('function ISInventoryPaneContextMenu.doStoveMenu',begin,true))
+ ISInventoryPaneContextMenu={onPutItems=function()end,onMoveItemsTo=function()end}
+ assert(loadstring(native:sub(begin,finish-1),'@native-createMenuNoItems'))()
+ package.loaded['ISUI/ISInventoryPaneContextMenu']=true
+ ISInventoryTransferAction={transferItem=function()end}
+ package.loaded['TimedActions/ISInventoryTransferAction']=true
+ package.loaded['InventoryTags/InventoryTags_TransferGate']=true
+ ISInventoryPane.transferItemsByWeight=function()end
+ IT.Filter.refreshBound=function()end
+ local registered=0
+ Events={}
+ local function event(name)
+  local handlers={}
+  Events[name]={handlers=handlers,Add=function(fn)assert(type(fn)=='function');handlers[#handlers+1]=fn end}
+ end
+ for _,name in ipairs({'OnFillWorldObjectContextMenu','OnFillInventoryObjectContextMenu','OnRefreshInventoryWindowContainers','OnTick'})do event(name)end
+ LuaEventManager={AddEvent=function(name)
+  eq(name,'OnFillInventoryContextMenuNoItems');registered=registered+1;assert(not Events[name]);event(name)
+ end}
+ function triggerEvent(name,...)
+  local e=Events[name];if e then for _,fn in ipairs(e.handlers)do fn(...)end end
+ end
+ local paused=false
+ function isGamePaused()return paused end
+ function player:getJoypadBind()return self.joypad or -1 end
+ function ui:setVisible(value)self.visible=value end
+ -- Native ISContextMenu starts numOptions at 1 (next insert index).
+ ISContextMenu.get=function()local c=ui:new();c.numOptions=1
+  c.addOption=function(self,...)local o=ui.addOption(self,...);self.numOptions=#self.options+1;return o end
+  return c
+ end
+ test('missing native empty-menu event is registered before attaching callback',function()
+  require 'InventoryTags/InventoryTags_Hooks'
+  eq(registered,1);eq(#Events.OnFillInventoryContextMenuNoItems.handlers,1)
+  eq(IT._logged['event:OnFillInventoryContextMenuNoItems'],nil)
+ end)
+ test('hook reload keeps one callback and does not rewrap transfer functions',function()
+  local transfer=ISInventoryPane.transferItemsByWeight
+  package.loaded['InventoryTags/InventoryTags_Hooks']=nil;require 'InventoryTags/InventoryTags_Hooks'
+  eq(registered,1);eq(#Events.OnFillInventoryContextMenuNoItems.handlers,1)
+  eq(ISInventoryPane.transferItemsByWeight,transfer)
+ end)
+ for _,joypad in ipairs({-1,0})do for _,isLoot in ipairs({false,true})do
+  test('native empty-list menu chooses displayed pane joypad='..joypad..' loot='..tostring(isLoot),function()
+   local p,c=pane({item('FirstAid')});c.storage=false;player.joypad=joypad
+   local other={inventoryPane={inventory={}}}
+   if isLoot then loot=p.parent;inv=other else loot=other end
+   local ctx=ISInventoryPaneContextMenu.createMenuNoItems(0,isLoot,10,20)
+   assert(ctx);verifyMedical(ctx,p)
+  end)
+ end end
+ test('native menu preserves pause and disabled-selection behavior',function()
+  local p,c=pane({item('FirstAid')});c.storage=false;loot={};paused=true
+  eq(ISInventoryPaneContextMenu.createMenuNoItems(0,false,0,0),nil);paused=false
+  SandboxVars.InventoryTags.EnableSelection=false
+  eq(ISInventoryPaneContextMenu.createMenuNoItems(0,false,0,0),nil)
+  SandboxVars.InventoryTags.EnableSelection=nil
+ end)
+ test('already registered native event is reused with existing listeners intact',function()
+  IT.ClientHooksInstalled=nil
+  local old=Events.OnFillInventoryContextMenuNoItems
+  local calls=0;old.handlers={};old.Add=function(fn)old.handlers[#old.handlers+1]=fn end
+  old.Add(function()calls=calls+1 end)
+  package.loaded['InventoryTags/InventoryTags_Hooks']=nil;require 'InventoryTags/InventoryTags_Hooks'
+  eq(registered,1);eq(Events.OnFillInventoryContextMenuNoItems,old);eq(#old.handlers,2)
+  local p,c=pane({item('FirstAid')});c.storage=false;loot={}
+  assert(ISInventoryPaneContextMenu.createMenuNoItems(0,false,0,0));eq(calls,1)
+ end)
+else
+ print('SKIP installed native empty-menu entry checks: pass ISInventoryPaneContextMenu.lua path')
+end
+
 print('PASS: '..tests..' offline selection/entry tests; no engine/Steam/NUC execution.')

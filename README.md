@@ -4,10 +4,20 @@
 
 Lua-only storage management for **Project Zomboid B42.20**. Mod ID: `InventoryTags`.
 
-**Current source: 0.1.4.** Minimum declared game version: 42.20.2.
+**Current source: 0.1.5.** Minimum declared game version: 42.20.2.
 The owner verified Auto Pack in local single-player and multiplayer play.
 Controller and other-mod combinations remain unverified.
 Existing Workshop item: `3806178177`. Source publication alone does not update Steam.
+
+## 0.1.5 compatibility fix
+
+Registers the native empty-inventory context event before attaching its listener
+on B42.21.0, preserving both mouse and controller entry points. Includes the four
+empty animation/action directories expected by the game loader. The 90-case
+selection suite executes the installed native empty-menu function; the previous
+hook fails the missing-event regression and the fixed hook passes. These checks
+are separate from owner in-game acceptance. Workshop description and cover stay
+unchanged. See [release evidence](docs/release-0.1.5.md).
 
 ## Features
 
@@ -73,7 +83,7 @@ menu entries; this is not deletion of game items or the animal system.
 ## Source layout and local testing
 
 ```text
-workshop/Contents/mods/InventoryTags/  # 38-file 0.1.4 runtime
+workshop/Contents/mods/InventoryTags/  # 42-file 0.1.5 runtime
 translations/catalog.json            # reviewed EN/CN/CH rows
 translations/generate.py             # check by default; explicit --write to regenerate
 docs/                                # grouping and validation scope
@@ -93,7 +103,7 @@ python tools/verify_runtime.py
 python translations/generate.py
 ```
 
-The manifest is pinned to 0.1.4 with unchanged icon/poster integration. Any future intentional runtime change must receive
+The manifest is pinned to 0.1.5 with unchanged icon/poster integration. Any future intentional runtime change must receive
 its own review and updated manifest. Edit trilingual rows together, then explicitly
 run `python translations/generate.py --write` and review the generated diff.
 Vanilla child-category translations are not republished by this mod.
